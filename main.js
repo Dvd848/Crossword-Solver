@@ -32,21 +32,21 @@ async function process_work(array, callback) {
 
 async function show_words() {
     const template = document.getElementById("template").value;
-    const words_ul = document.getElementById("words");
+    const words_list = document.getElementById("words");
 
-    words_ul.innerHTML = "";
+    words_list.innerHTML = "";
 
     const words = await get_words(template);
     await process_work(words, function(word){
         let li = document.createElement("li");
         li.appendChild(document.createTextNode(word));
-        words_ul.appendChild(li);
-    })
-
-    return false;
+        words_list.appendChild(li);
+    });
 }
 
 document.getElementById("word_form").onsubmit = async function(event) {
     event.preventDefault();
     await show_words();
+
+    return false;
 };
