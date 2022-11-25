@@ -1,7 +1,7 @@
 
 const context = {
     initialized: false,
-    HEB_CHARS: /(\?|[\u0590-\u05fe]'?)/g,
+    TEMPLATE_CHARS: /(\?|[\u0590-\u05fe]'?)/g,
 
     words: {},
 
@@ -15,13 +15,41 @@ const context = {
         "ת": "t", "ת'": "q"
     },
 
-    reverse_translate_mapping: {}
+    reverse_translate_mapping: {},
+
+    double_char_mapping: {}
 }
 
 function init_module() {
+    if (context.initialized) {
+        return;
+    }
+
     for (const [key, value] of Object.entries(context.translate_mapping)) {
         context.reverse_translate_mapping[value] = key;
+        if (key.length > 1) {
+            context.double_char_mapping[key[0]] = key;
+        }
     }
+
+    context.initialized = true;
+}
+
+// https://stackoverflow.com/questions/15298912/
+function cartesian(...args) {
+    var r = [], max = args.length-1;
+    function helper(arr, i) {
+        for (var j=0, l=args[i].length; j<l; j++) {
+            var a = arr.slice(0); // clone arr
+            a.push(args[i][j]);
+            if (i==max)
+                r.push(a);
+            else
+                helper(a, i+1);
+        }
+    }
+    helper([], 0);
+    return r;
 }
 
 async function load_wordlist(length) {
@@ -40,11 +68,11 @@ async function load_wordlist(length) {
 }
 
 function get_word_length(word) {
-    return (word.match(context.HEB_CHARS) || []).length;
+    return (word.match(context.TEMPLATE_CHARS) || []).length;
 }
 
 function heb2eng(word) {
-    return word.replace(context.HEB_CHARS, m => context.translate_mapping[m]);
+    return word.replace(context.TEMPLATE_CHARS, m => context.translate_mapping[m]);
 }
 
 function eng2heb(word) {
@@ -52,8 +80,26 @@ function eng2heb(word) {
 }
 
 function construct_regex(template) {
-    template = template.replaceAll("?", ".");
-    return heb2eng(template);
+    const options = Array.from(Array(get_word_length(template)), () => new Array(0))
+
+    let i = 0;
+    for (const match of template.matchAll(context.TEMPLATE_CHARS)) {
+        let char = match[0];
+        if (char == "?") {
+            char = ".";
+        }
+        options[i].push(char);
+        if (char in context.double_char_mapping) {
+            options[i].push(context.double_char_mapping[char]);
+        }
+
+        i += 1;
+    }
+
+    const regex_combinations = cartesian(...options)
+    const res = regex_combinations.map(x => heb2eng(x.join(""))).join("|");
+
+    return res;
 }
 
 export async function get_words(template) {
