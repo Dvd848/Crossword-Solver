@@ -109,6 +109,6 @@ export async function get_words(template) {
     const regex = construct_regex(template);
 
     const result = words.matchAll(regex);
-    return Array.from(result, ([word]) => eng2heb(word));
+    return Array.from(result, ([word]) => eng2heb(word)).sort();
 
 }
