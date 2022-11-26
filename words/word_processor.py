@@ -4,8 +4,9 @@ import shutil
 from collections import defaultdict
 from pathlib import Path
 
-INPUT_PATH = Path(__file__).parent / "words.txt"
-OUT_PATH = Path(__file__).parent / "out"
+INPUT_DIR = Path(__file__).parent
+INPUT_PREFIX = "words_"
+OUTPUT_DIR = Path(__file__).parent / "out"
 
 TRANSLATE_CHARS = re.compile(r"([\u0590-\u05fe]'?)")
 
@@ -19,23 +20,33 @@ translate_mapping = {
 }
 
 try:
-    shutil.rmtree(str(OUT_PATH))
+    shutil.rmtree(str(OUTPUT_DIR))
 except FileNotFoundError:
     pass
-OUT_PATH.mkdir(parents = True, exist_ok = True)
+OUTPUT_DIR.mkdir(parents = True, exist_ok = True)
 
-words_mapping = defaultdict(list)
-words_mapping_translated = defaultdict(list)
+for source in INPUT_DIR.glob(f"{INPUT_PREFIX}*.txt"):
 
-with open(INPUT_PATH, "r", encoding = "utf8") as f:
-    for line in f:
-        line = line.rstrip()
-        bucket = len(line) - line.count("'")
-        words_mapping[bucket].append(line)
-        words_mapping_translated[bucket].append(TRANSLATE_CHARS.sub(lambda m: translate_mapping.get(m.group(1), m.group(1)), line))
+    print(f"Processing {source}")
 
-for mapping, prefix in [(words_mapping, "h"), (words_mapping_translated, "e")]:
-    for length, words in mapping.items():
-        with open(OUT_PATH / f"{prefix}{length}.txt", "w", encoding = "utf8") as o:
-            o.write("\n".join(sorted(words)))
+    output_path = OUTPUT_DIR / source.stem.replace(INPUT_PREFIX, "")
+    output_path.mkdir()
+
+    words_mapping = defaultdict(list)
+    words_mapping_translated = defaultdict(list)
+    num_words = 0
+
+    with open(source, "r", encoding = "utf8") as f:
+        for line in f:
+            line = line.rstrip()
+            bucket = len(line) - line.count("'")
+            words_mapping[bucket].append(line)
+            words_mapping_translated[bucket].append(TRANSLATE_CHARS.sub(lambda m: translate_mapping.get(m.group(1), m.group(1)), line))
+            num_words += 1
+
+    for mapping, prefix in [(words_mapping, "h"), (words_mapping_translated, "e")]:
+        for length, words in mapping.items():
+            with open(output_path / f"{prefix}{length}.txt", "w", encoding = "utf8") as o:
+                o.write("\n".join(sorted(words)))
     
+    print(f"Processed {num_words} words")

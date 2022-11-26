@@ -8,18 +8,23 @@
     <title>פותר תשבצים</title>
 
     <link rel="stylesheet" href="style.css">
-    <script type="module" src="main.js"></script>
 </head>
 
 <body dir="rtl">
     <h1>פותר תשבצים</h1>
 
     <form id="word_form" onsubmit="event.preventDefault();">
+        <select id="sources"></select>
         <input type="text" id="template" />
         <input type="submit"/>
     </form>
 
     <ol id="words"></ol>
-    
+    <script>
+    document.addEventListener('DOMContentLoaded', async (event) => {
+        let main = await import("./main.js");
+        main.init();
+    });
+    </script>
 </body>
 </html>

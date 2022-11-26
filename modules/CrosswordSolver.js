@@ -52,19 +52,23 @@ function cartesian(...args) {
     return r;
 }
 
-async function load_wordlist(length) {
-    if (!(length in context.words)) {
+async function load_wordlist(source, length) {
+    if (!(source in context.words)) {
+        context.words[source] = {};
+    }
+
+    if (!(length in context.words[source])) {
         console.log(`Loading database for word length ${length}`);
-        const response = await fetch(`words/out/e${length}.txt`);
+        const response = await fetch(`words/out/${source}/e${length}.txt`);
         if (!response.ok) {
             const message = `An error has occurred: ${response.status}`;
             throw new Error(message);
         }
         const words = await response.text();
-        context.words[length] = words;
+        context.words[source][length] = words;
     }
 
-    return context.words[length];
+    return context.words[source][length];
 }
 
 function get_word_length(word) {
@@ -102,13 +106,24 @@ function construct_regex(template) {
     return res;
 }
 
-export async function get_words(template) {
+export async function get_words(source, template) {
     init_module();
     const word_length = get_word_length(template);
-    const words = await load_wordlist(word_length);
+    const words = await load_wordlist(source, word_length);
     const regex = construct_regex(template);
 
     const result = words.matchAll(regex);
     return Array.from(result, ([word]) => eng2heb(word)).sort();
 
 }
+
+export const sources = [
+    {
+        "name": "ויקימילון",
+        "code": "wikidict"
+    },
+    {
+        "name": "פרויקט Hspell (בודק איות)",
+        "code": "hspell"
+    }
+]

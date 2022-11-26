@@ -1,17 +1,9 @@
-import re
-import shutil
-
 from collections import defaultdict
 from pathlib import Path
+from common import *
 
 INPUT_PATH = Path(__file__).parent / "hewiktionary-latest-all-titles.txt" # https://dumps.wikimedia.org/hewiktionary/latest/
-OUTPUT_PATH = Path(__file__).parent / "words.txt"
-
-# TODO: Unify with he_IL.py
-EXCLUDE_CHARS = re.compile(r"([^א-ת']|(?<![גזצתץ])')")
-
-def has_excluded_characters(string):
-    return not EXCLUDE_CHARS.search(string)
+OUTPUT_PATH = Path(__file__).parent / "words_wikidict.txt"
 
 with open(INPUT_PATH, "r", encoding = "utf8") as f, open(OUTPUT_PATH, "w", encoding = "utf8") as o:
     for line in f:

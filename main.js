@@ -1,4 +1,4 @@
-import { get_words } from './modules/CrosswordSolver.js';
+import { get_words, sources } from './modules/CrosswordSolver.js';
 
 // https://stackoverflow.com/questions/38735201/
 const pause = (function () {
@@ -33,10 +33,13 @@ async function process_work(array, callback) {
 async function show_words() {
     const template = document.getElementById("template").value;
     const words_list = document.getElementById("words");
+    const source = document.getElementById("sources").value;
 
     words_list.innerHTML = "";
 
-    const words = await get_words(template);
+    console.log(`Searching for '${template}' in ${source}`);
+
+    const words = await get_words(source, template);
     await process_work(words, function(word){
         let li = document.createElement("li");
         li.appendChild(document.createTextNode(word));
@@ -44,9 +47,26 @@ async function show_words() {
     });
 }
 
-document.getElementById("word_form").onsubmit = async function(event) {
-    event.preventDefault();
-    await show_words();
+function setup_form() {
+    document.getElementById("word_form").onsubmit = async function(event) {
+        event.preventDefault();
+        await show_words();
+    
+        return false;
+    };
+}
 
-    return false;
+function setup_sources() {
+    const select = document.getElementById("sources");
+    for (let source of sources){
+        const opt = document.createElement('option');
+        opt.value = source.code;
+        opt.innerText = source.name;
+        select.appendChild(opt);
+    }
+}
+
+export function init() {
+    setup_form();
+    setup_sources();
 };
