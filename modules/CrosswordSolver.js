@@ -1,7 +1,9 @@
 
 const context = {
     initialized: false,
+
     TEMPLATE_CHARS: /(\?|[\u0590-\u05fe]'?)/g,
+    LEGAL_TEMPLATE: undefined,
 
     words: {},
 
@@ -17,7 +19,19 @@ const context = {
 
     reverse_translate_mapping: {},
 
-    double_char_mapping: {}
+    apostrophe_mapping: {}
+}
+
+export class CsError extends Error {
+    constructor(message, options) {
+        super(message, options);
+    }
+}
+
+export class CsIllegalTemplateError extends CsError {
+    constructor(message, options) {
+        super(message, options);
+    }
 }
 
 function init_module() {
@@ -25,12 +39,16 @@ function init_module() {
         return;
     }
 
+    const apostrophe_chars = []
     for (const [key, value] of Object.entries(context.translate_mapping)) {
         context.reverse_translate_mapping[value] = key;
         if (key.length > 1) {
-            context.double_char_mapping[key[0]] = key;
+            context.apostrophe_mapping[key[0]] = key;
+            apostrophe_chars.push(key);
         }
     }
+
+    context.LEGAL_TEMPLATE = RegExp(`^([\u0590-\u05fe]|${apostrophe_chars.join("|")}|\\?)+$`, 'g')
 
     context.initialized = true;
 }
@@ -53,6 +71,10 @@ function cartesian(...args) {
 }
 
 async function load_wordlist(source, length) {
+    if (length <= 0) {
+        throw new CsError(`Illegal length: ${length}`);
+    }
+
     if (!(source in context.words)) {
         context.words[source] = {};
     }
@@ -61,8 +83,11 @@ async function load_wordlist(source, length) {
         console.log(`Loading database for word length ${length}`);
         const response = await fetch(`words/out/${source}/e${length}.txt`);
         if (!response.ok) {
-            const message = `An error has occurred: ${response.status}`;
-            throw new Error(message);
+            if (response.status == 404) {
+                console.log(`Can't find database for word length ${length}`);
+                return "";
+            }
+            throw new CsError(`An error has occurred: ${response.status}`);
         }
         const words = await response.text();
         context.words[source][length] = words;
@@ -83,6 +108,10 @@ function eng2heb(word) {
     return word.replace(/[a-zA-Z]/g, m => context.reverse_translate_mapping[m]);
 }
 
+function is_legel_template(template) {
+    return template.match(context.LEGAL_TEMPLATE);
+}
+
 function construct_regex(template) {
     const options = Array.from(Array(get_word_length(template)), () => new Array(0))
 
@@ -93,8 +122,8 @@ function construct_regex(template) {
             char = ".";
         }
         options[i].push(char);
-        if (char in context.double_char_mapping) {
-            options[i].push(context.double_char_mapping[char]);
+        if (char in context.apostrophe_mapping) {
+            options[i].push(context.apostrophe_mapping[char]);
         }
 
         i += 1;
@@ -108,6 +137,9 @@ function construct_regex(template) {
 
 export async function get_words(source, template) {
     init_module();
+    if (!is_legel_template(template)) {
+        throw new CsIllegalTemplateError(`Illegal template: '${template}'`);
+    }
     const word_length = get_word_length(template);
     const words = await load_wordlist(source, word_length);
     const regex = construct_regex(template);
@@ -115,6 +147,10 @@ export async function get_words(source, template) {
     const result = words.matchAll(regex);
     return Array.from(result, ([word]) => eng2heb(word)).sort();
 
+}
+
+export function get_apostrophe_chars() {
+    return Object.keys(context.apostrophe_mapping);
 }
 
 export const sources = [

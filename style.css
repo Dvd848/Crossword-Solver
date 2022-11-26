@@ -30,3 +30,10 @@ ol#words {
     align-items: center;
     justify-content: center;
 }
+
+.alert {
+    max-width: 500px;
+    margin: 50px auto;
+    /*text-align: center;*/
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
