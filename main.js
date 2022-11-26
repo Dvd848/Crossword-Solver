@@ -20,21 +20,25 @@ const pause = (function () {
     });
 })();
 
-async function process_work(array, callback) {
+async function process_work(array, work_callback, done_callback) {
     const iterationsPerChunk = 10000;
     for (let i = 0; i < array.length; i++) {
         if (i && i % iterationsPerChunk === 0) {
             await pause();
         }
-        callback(array[i]);
+        work_callback(array[i]);
     }
+    done_callback();
 }
 
 async function show_words() {
     const template = document.getElementById("template").value;
     const words_list = document.getElementById("words");
     const source = document.getElementById("sources").value;
-
+    const button = document.getElementById("submit")
+    
+    button.disabled = true; 
+    words_list.style.display = "none";
     words_list.innerHTML = "";
 
     console.log(`Searching for '${template}' in ${source}`);
@@ -44,6 +48,10 @@ async function show_words() {
         let li = document.createElement("li");
         li.appendChild(document.createTextNode(word));
         words_list.appendChild(li);
+    }, 
+    function() {
+        words_list.style.display = "block";
+        button.disabled = false; 
     });
 }
 
@@ -69,4 +77,5 @@ function setup_sources() {
 export function init() {
     setup_form();
     setup_sources();
+    document.getElementById("template").focus();
 };

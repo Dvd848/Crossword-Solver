@@ -1,7 +1,32 @@
 
+body {
+    background-color: #f7f7f7;
+}
+
+h1 {
+    text-align: center;
+    margin: 20px;
+}
+
+.center {
+    text-align: center;
+}
+
 ol#words {
+    display: none;
     width: 90%;
     column-count: 5;
     column-width: 13em;
-    margin: 10px auto;
+    margin: 30px auto;
+    padding: 15px;
+
+    text-align: center;
+    list-style-position: inside;
+    box-shadow: rgba(9, 30, 66, 0.25) 0px 4px 8px -2px, rgba(9, 30, 66, 0.08) 0px 0px 0px 1px;
+}
+
+
+#word_form, #word_form .row {
+    align-items: center;
+    justify-content: center;
 }
