@@ -97,7 +97,12 @@ async function show_words() {
     try {
         const words = await get_words(source, template);
         if (words.length == 0) {
-            throw new CsUiError("warning", "אופס...", "לא מצאנו אף מילה שמתאימה לתבנית הזו 🙁");
+            let message = "<p style='text-align: center'>";
+            message += "לא מצאנו אף מילה שמתאימה לתבנית הזו 🙁";
+            message += "<br/>";
+            message += "נסו אולי מקור אחר?";
+            message += "</p>";
+            throw new CsUiError("warning", "אופס...", message);
         }
 
         await process_work(words, function(word){
@@ -153,4 +158,5 @@ export function init() {
     setup_form();
     setup_sources();
     document.getElementById("template").focus();
+    console.log("Initialization complete");
 };
