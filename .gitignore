@@ -4,6 +4,7 @@ words/hewiktionary-latest-all-titles.txt
 words/wolig.txt
 words/woo.txt
 words/words_*.txt
+words/license_*.txt
 tmp
 notes.txt
 *.pyc

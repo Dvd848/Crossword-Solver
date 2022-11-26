@@ -1,5 +1,6 @@
 import re
 import shutil
+import os
 
 from collections import defaultdict
 from pathlib import Path
@@ -29,7 +30,9 @@ for source in INPUT_DIR.glob(f"{INPUT_PREFIX}*.txt"):
 
     print(f"Processing {source}")
 
-    output_path = OUTPUT_DIR / source.stem.replace(INPUT_PREFIX, "")
+    identifier = source.stem.replace(INPUT_PREFIX, "")
+
+    output_path = OUTPUT_DIR / identifier
     output_path.mkdir()
 
     words_mapping = defaultdict(list)
@@ -48,5 +51,9 @@ for source in INPUT_DIR.glob(f"{INPUT_PREFIX}*.txt"):
         for length, words in mapping.items():
             with open(output_path / f"{prefix}{length}.txt", "w", encoding = "utf8") as o:
                 o.write("\n".join(sorted(words)))
+
+    license_path = INPUT_DIR / f"license_{identifier}.txt"
+    if license_path.exists():
+        shutil.copyfile(license_path, output_path / "LICENSE")
     
     print(f"Processed {num_words} words")
