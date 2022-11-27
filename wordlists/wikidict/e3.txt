@@ -299,7 +299,6 @@ Sve
 Svh
 Svk
 Svl
-Svq
 Svr
 SyC
 SyH
@@ -330,7 +329,6 @@ Tks
 TlP
 Tla
 Tlh
-Tlj
 Tlk
 TmN
 Tma
@@ -502,7 +500,6 @@ avP
 avb
 avd
 avh
-avj
 avl
 avr
 avt
@@ -796,7 +793,6 @@ drs
 dty
 dvH
 dvS
-dvW
 dvb
 dvd
 dvh
@@ -1084,7 +1080,6 @@ hss
 htl
 htz
 hvN
-hvW
 hva
 hvd
 hvh
@@ -1249,7 +1244,6 @@ lhT
 lhb
 lhg
 lhk
-lhq
 lkH
 lkT
 lkh

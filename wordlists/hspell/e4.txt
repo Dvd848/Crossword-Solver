@@ -20844,7 +20844,6 @@ vSTN
 vSTh
 vSTv
 vSTy
-vSvq
 vaTy
 vady
 vcHN

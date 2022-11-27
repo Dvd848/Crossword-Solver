@@ -12,7 +12,7 @@ with open(INPUT_PATH, "r", encoding = "utf8") as f, open(OUTPUT_PATH, "w", encod
             print(f"Skipping {line.rstrip()}")
             continue
         line = line.rstrip().split()[1]
-        if  (has_excluded_characters(line)) or (len(line) == 1) or (len(line) == 2 and line[-1] == "'"):
+        if  (has_excluded_characters(line)) or (len(line) == 1) or (len(line) == 2 and line[-1] == "'") or is_ignored(line):
             print(f"Skipping {line}")
             continue
         o.write(f"{line}\n")
