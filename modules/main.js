@@ -79,18 +79,26 @@ function hideAlert() {
 
 async function showWords() {
     const wordTemplate = document.getElementById("template").value.trim();
-    const wordList = document.getElementById("words");
     const dictSource = document.getElementById("sources").value;
     const submitButton = document.getElementById("submit");
+    const wordListWrapper = document.getElementById("word_wrapper");
+    const loader = document.getElementById("loader");
+    let wordList = document.getElementById("words");
 
     if (wordTemplate.length == 0) {
         return;
     }
     
     submitButton.disabled = true; 
-    wordList.style.display = "none";
+
+    if (wordList != null) {
+        wordList.remove();
+    }
+
+    loader.style.display = "block";
+    wordList = document.createElement("ol");
+    wordList.id = "words";
     hideAlert();
-    wordList.innerHTML = "";
 
     console.log(`Searching for '${wordTemplate}' in ${dictSource}`);
     
@@ -106,15 +114,21 @@ async function showWords() {
         }
 
         await processWork(words, function(word){
+            // Executed for each word:
             let li = document.createElement("li");
             li.appendChild(document.createTextNode(word));
             wordList.appendChild(li);
         }, 
         function() {
+            // Executed when done:
+            loader.style.display = "none";
+            wordListWrapper.appendChild(wordList);
             wordList.style.display = "block";
             submitButton.disabled = false; 
         });
     } catch (e) {
+        loader.style.display = "none";
+
         if (e instanceof CsUiError) {
             showAlert(e.type, e.title, e.message);
         } else if (e instanceof CsIllegalTemplateError) {
