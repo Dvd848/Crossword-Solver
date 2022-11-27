@@ -7,7 +7,7 @@ from pathlib import Path
 
 INPUT_DIR = Path(__file__).parent
 INPUT_PREFIX = "words_"
-OUTPUT_DIR = Path(__file__).parent / "out"
+OUTPUT_DIR = Path(__file__).parent / ".." / ".." / "wordlists"
 
 TRANSLATE_CHARS = re.compile(r"([\u0590-\u05fe]'?)")
 

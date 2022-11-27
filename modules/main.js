@@ -1,4 +1,4 @@
-import { get_words, sources, CsIllegalTemplateError, get_apostrophe_chars } from './modules/CrosswordSolver.js';
+import { get_words, sources, CsIllegalTemplateError, get_apostrophe_chars } from './CrosswordSolver.js';
 
 class CsUiError extends Error {
     constructor(type, title, message, options) {

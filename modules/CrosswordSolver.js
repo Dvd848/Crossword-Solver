@@ -81,7 +81,7 @@ async function load_wordlist(source, length) {
 
     if (!(length in context.words[source])) {
         console.log(`Loading database for word length ${length}`);
-        const response = await fetch(`words/out/${source}/e${length}.txt`);
+        const response = await fetch(`wordlists/${source}/e${length}.txt`);
         if (!response.ok) {
             if (response.status == 404) {
                 console.log(`Can't find database for word length ${length}`);
