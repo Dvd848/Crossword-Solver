@@ -8,7 +8,7 @@ const context = {
     words: {},
 
     // TODO: Share with word_processor.py
-    translate_mapping: {
+    translateMapping: {
         "א": "a", "ב": "b", "ג": "g", "ג'": "j", "ד": "d", "ה": "h", 
         "ו": "v", "ז": "z", "ז'": "Z", "ח": "H", "ט": "T", "י": "y", 
         "כ": "c", "ך": "C", "ל": "l", "מ": "m", "ם": "M", "נ": "n", 
@@ -17,9 +17,9 @@ const context = {
         "ת": "t", "ת'": "q"
     },
 
-    reverse_translate_mapping: {},
+    reverseTranslateMapping: {},
 
-    apostrophe_mapping: {}
+    apostropheMapping: {}
 }
 
 export class CsError extends Error {
@@ -34,21 +34,21 @@ export class CsIllegalTemplateError extends CsError {
     }
 }
 
-function init_module() {
+function initModule() {
     if (context.initialized) {
         return;
     }
 
-    const apostrophe_chars = []
-    for (const [key, value] of Object.entries(context.translate_mapping)) {
-        context.reverse_translate_mapping[value] = key;
+    const apostropheChars = []
+    for (const [key, value] of Object.entries(context.translateMapping)) {
+        context.reverseTranslateMapping[value] = key;
         if (key.length > 1) {
-            context.apostrophe_mapping[key[0]] = key;
-            apostrophe_chars.push(key);
+            context.apostropheMapping[key[0]] = key;
+            apostropheChars.push(key);
         }
     }
 
-    context.LEGAL_TEMPLATE = RegExp(`^([\u0590-\u05fe]|${apostrophe_chars.join("|")}|\\?)+$`, 'g')
+    context.LEGAL_TEMPLATE = RegExp(`^([\u0590-\u05fe]|${apostropheChars.join("|")}|\\?)+$`, 'g')
 
     context.initialized = true;
 }
@@ -70,7 +70,7 @@ function cartesian(...args) {
     return r;
 }
 
-async function load_wordlist(source, length) {
+async function loadWordlist(source, length) {
     if (length <= 0) {
         throw new CsError(`Illegal length: ${length}`);
     }
@@ -96,24 +96,24 @@ async function load_wordlist(source, length) {
     return context.words[source][length];
 }
 
-function get_word_length(word) {
+function getWordLength(word) {
     return (word.match(context.TEMPLATE_CHARS) || []).length;
 }
 
 function heb2eng(word) {
-    return word.replace(context.TEMPLATE_CHARS, m => context.translate_mapping[m]);
+    return word.replace(context.TEMPLATE_CHARS, m => context.translateMapping[m]);
 }
 
 function eng2heb(word) {
-    return word.replace(/[a-zA-Z]/g, m => context.reverse_translate_mapping[m]);
+    return word.replace(/[a-zA-Z]/g, m => context.reverseTranslateMapping[m]);
 }
 
-function is_legel_template(template) {
+function isLegelTemplate(template) {
     return template.match(context.LEGAL_TEMPLATE);
 }
 
-function construct_regex(template) {
-    const options = Array.from(Array(get_word_length(template)), () => new Array(0))
+function constructSearchRegex(template) {
+    const options = Array.from(Array(getWordLength(template)), () => new Array(0))
 
     let i = 0;
     for (const match of template.matchAll(context.TEMPLATE_CHARS)) {
@@ -122,38 +122,38 @@ function construct_regex(template) {
             char = ".";
         }
         options[i].push(char);
-        if (char in context.apostrophe_mapping) {
-            options[i].push(context.apostrophe_mapping[char]);
+        if (char in context.apostropheMapping) {
+            options[i].push(context.apostropheMapping[char]);
         }
 
         i += 1;
     }
 
-    const regex_combinations = cartesian(...options)
-    const res = regex_combinations.map(x => heb2eng(x.join(""))).join("|");
+    const regexCombinations = cartesian(...options)
+    const res = regexCombinations.map(x => heb2eng(x.join(""))).join("|");
 
     return res;
 }
 
-export async function get_words(source, template) {
-    init_module();
-    if (!is_legel_template(template)) {
+export async function getWords(source, template) {
+    initModule();
+    if (!isLegelTemplate(template)) {
         throw new CsIllegalTemplateError(`Illegal template: '${template}'`);
     }
-    const word_length = get_word_length(template);
-    const words = await load_wordlist(source, word_length);
-    const regex = construct_regex(template);
+    const wordLength = getWordLength(template);
+    const words = await loadWordlist(source, wordLength);
+    const regex = constructSearchRegex(template);
 
     const result = words.matchAll(regex);
     return Array.from(result, ([word]) => eng2heb(word)).sort();
 
 }
 
-export function get_apostrophe_chars() {
-    return Object.keys(context.apostrophe_mapping);
+export function getApostropheChars() {
+    return Object.keys(context.apostropheMapping);
 }
 
-export const sources = [
+export const dictSources = [
     {
         "name": "ויקימילון",
         "code": "wikidict"

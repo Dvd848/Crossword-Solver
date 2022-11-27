@@ -1,4 +1,4 @@
-import { get_words, sources, CsIllegalTemplateError, get_apostrophe_chars } from './CrosswordSolver.js';
+import { getWords, dictSources, CsIllegalTemplateError, getApostropheChars } from './CrosswordSolver.js';
 
 class CsUiError extends Error {
     constructor(type, title, message, options) {
@@ -28,74 +28,74 @@ const pause = (function () {
     });
 })();
 
-async function process_work(array, work_callback, done_callback) {
+async function processWork(array, workCallback, doneCallback) {
     const iterationsPerChunk = 10000;
     for (let i = 0; i < array.length; i++) {
         if (i && i % iterationsPerChunk === 0) {
             await pause();
         }
-        work_callback(array[i]);
+        workCallback(array[i]);
     }
-    done_callback();
+    doneCallback();
 }
 
-function toggle_alert(type, title, message, show) {
-    const alert_elem = document.getElementById("alert_div");
-    let css_alert = "";
+function toggleAlert(type, title, message, show) {
+    const alertElem = document.getElementById("alert_div");
+    let cssAlert = "";
 
     switch (type) {
         case "warning":
-            css_alert = "alert-warning";
+            cssAlert = "alert-warning";
             break;
         case "error":
         default:
-            css_alert = "alert-danger";
+            cssAlert = "alert-danger";
             break;
     }
     
     if (show) {
         document.getElementById("alert_title").innerText = title;
         document.getElementById("alert_message").innerHTML = message;
-        alert_elem.classList.remove("alert-warning");
-        alert_elem.classList.remove("alert-danger");
-        alert_elem.classList.add(css_alert);
+        alertElem.classList.remove("alert-warning");
+        alertElem.classList.remove("alert-danger");
+        alertElem.classList.add(cssAlert);
 
-        alert_elem.classList.remove("d-none");
-        alert_elem.classList.add("show");
+        alertElem.classList.remove("d-none");
+        alertElem.classList.add("show");
     }
     else {
-        alert_elem.classList.remove("show");
-        alert_elem.classList.add("d-none");
+        alertElem.classList.remove("show");
+        alertElem.classList.add("d-none");
     }
 }
 
-function show_alert(type, title, message) {
-    toggle_alert(type, title, message, true);
+function showAlert(type, title, message) {
+    toggleAlert(type, title, message, true);
 }
 
-function hide_alert() {
-    toggle_alert("", "", "", false);
+function hideAlert() {
+    toggleAlert("", "", "", false);
 }
 
-async function show_words() {
-    const template = document.getElementById("template").value.trim();
-    const words_list = document.getElementById("words");
-    const source = document.getElementById("sources").value;
-    const button = document.getElementById("submit");
+async function showWords() {
+    const wordTemplate = document.getElementById("template").value.trim();
+    const wordList = document.getElementById("words");
+    const dictSource = document.getElementById("sources").value;
+    const submitButton = document.getElementById("submit");
 
-    if (template.length == 0) {
+    if (wordTemplate.length == 0) {
         return;
     }
     
-    button.disabled = true; 
-    words_list.style.display = "none";
-    hide_alert();
-    words_list.innerHTML = "";
+    submitButton.disabled = true; 
+    wordList.style.display = "none";
+    hideAlert();
+    wordList.innerHTML = "";
 
-    console.log(`Searching for '${template}' in ${source}`);
+    console.log(`Searching for '${wordTemplate}' in ${dictSource}`);
     
     try {
-        const words = await get_words(source, template);
+        const words = await getWords(dictSource, wordTemplate);
         if (words.length == 0) {
             let message = "<p style='text-align: center'>";
             message += "לא מצאנו אף מילה שמתאימה לתבנית הזו 🙁";
@@ -105,58 +105,58 @@ async function show_words() {
             throw new CsUiError("warning", "אופס...", message);
         }
 
-        await process_work(words, function(word){
+        await processWork(words, function(word){
             let li = document.createElement("li");
             li.appendChild(document.createTextNode(word));
-            words_list.appendChild(li);
+            wordList.appendChild(li);
         }, 
         function() {
-            words_list.style.display = "block";
-            button.disabled = false; 
+            wordList.style.display = "block";
+            submitButton.disabled = false; 
         });
     } catch (e) {
         if (e instanceof CsUiError) {
-            show_alert(e.type, e.title, e.message);
+            showAlert(e.type, e.title, e.message);
         } else if (e instanceof CsIllegalTemplateError) {
             let message = "ניתן להשתמש אך ורק בתווים הבאים:</br>";
             message += "<ul>";
             message += "<li>אותיות בעברית</li>";
-            message += `<li>גרש (במידה והוא מופיע לאחר ${get_apostrophe_chars().join(" / ")})</li>`;
+            message += `<li>גרש (במידה והוא מופיע לאחר ${getApostropheChars().join(" / ")})</li>`;
             message += "<li>סימן שאלה (לסימון תו לא ידוע)</li>";
             message += "</ul>";
 
-            show_alert("error", "שגיאה: תבנית לא חוקית!", message);
+            showAlert("error", "שגיאה: תבנית לא חוקית!", message);
         } else {
-            show_alert("error", "שגיאה פנימית!", "מעניין מה קרה שם...");
+            showAlert("error", "שגיאה פנימית!", "מעניין מה קרה שם...");
         }
 
         console.log(e.message);
-        button.disabled = false; 
+        submitButton.disabled = false; 
     }
 }
 
-function setup_form() {
+function setupForm() {
     document.getElementById("word_form").onsubmit = async function(event) {
         event.preventDefault();
-        await show_words();
+        await showWords();
     
         return false;
     };
 }
 
-function setup_sources() {
-    const select = document.getElementById("sources");
-    for (let source of sources){
+function setupDictSources() {
+    const dictSourceSelect = document.getElementById("sources");
+    for (let source of dictSources){
         const opt = document.createElement('option');
         opt.value = source.code;
         opt.innerText = source.name;
-        select.appendChild(opt);
+        dictSourceSelect.appendChild(opt);
     }
 }
 
 export function init() {
-    setup_form();
-    setup_sources();
+    setupForm();
+    setupDictSources();
     document.getElementById("template").focus();
     console.log("Initialization complete");
 };
