@@ -155,15 +155,11 @@ export function getApostropheChars() {
 
 export const dictSources = [
     {
-        "name": "ויקימילון",
-        "code": "wikidict"
+        "name": "מילון (ויקימילון + Hebrew Wordnet)",
+        "code": "dictionary"
     },
     {
-        "name": "מאגר המילים Hebrew WordNet",
-        "code": "wordnet"
-    },
-    {
-        "name": "פרויקט Hspell (בודק איות)",
+        "name": "בודק איות (Hspell)",
         "code": "hspell"
     }
 ]
