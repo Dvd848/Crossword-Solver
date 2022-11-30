@@ -5,6 +5,7 @@ utils/words/wolig.txt
 utils/words/woo.txt
 utils/words/words_*.txt
 utils/words/license_*.txt
+utils/words/hebrew_synonyms.xml
 tmp
 notes.txt
 *.pyc

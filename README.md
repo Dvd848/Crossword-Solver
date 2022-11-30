@@ -20,4 +20,5 @@ Crossword Solver is released under [AGPLv3](https://www.gnu.org/licenses/agpl-3.
 
 Crossword Solver utilizes several open dictionaries as part of its functionality:
  * [Wiktionary](https://he.wiktionary.org/wiki/%D7%95%D7%99%D7%A7%D7%99%D7%9E%D7%99%D7%9C%D7%95%D7%9F:%D7%A2%D7%9E%D7%95%D7%93_%D7%A8%D7%90%D7%A9%D7%99) - Released under [CC-BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)
+ * [Hebrew WordNet](http://cl.haifa.ac.il/projects/mwn/index.shtml) - Released under [MIT](http://cl.haifa.ac.il/projects/mwn/license.txt)
  * [Hspell](http://hspell.ivrix.org.il/) Dictionary - Released under [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.en.html)

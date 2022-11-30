@@ -159,6 +159,10 @@ export const dictSources = [
         "code": "wikidict"
     },
     {
+        "name": "מאגר המילים Hebrew WordNet",
+        "code": "wordnet"
+    },
+    {
         "name": "פרויקט Hspell (בודק איות)",
         "code": "hspell"
     }
