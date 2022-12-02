@@ -1,4 +1,5 @@
 import { getWords, dictSources, CsIllegalTemplateError, getApostropheChars } from './CrosswordSolver.js';
+import { CompletionDAWG } from './dawg/dawgs.js';
 
 class CsUiError extends Error {
     constructor(type, title, message, options) {
@@ -174,3 +175,18 @@ export function init() {
     document.getElementById("template").focus();
     console.log("Initialization complete");
 };
+
+/*
+export async function test() {
+    console.log("test");
+    const response = await fetch(`wordlists/dictionary/e2.dawg`);
+    const wordsBin = await response.arrayBuffer();
+    const dawg = new CompletionDAWG();
+    console.log("loading dawg");
+    dawg.load(wordsBin);
+    console.log("printing keys");
+    console.log(dawg.keys("a"))
+    console.log(dawg.keys(""))
+    console.log("done");
+}
+*/

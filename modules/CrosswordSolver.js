@@ -1,3 +1,4 @@
+import { CompletionDAWG } from './dawg/dawgs.js';
 
 const context = {
     initialized: false,
@@ -70,6 +71,10 @@ function cartesian(...args) {
     return r;
 }
 
+function getDbType(source, length) {
+    return "dawg";
+}
+
 async function loadWordlist(source, length) {
     if (length <= 0) {
         throw new CsError(`Illegal length: ${length}`);
@@ -80,8 +85,9 @@ async function loadWordlist(source, length) {
     }
 
     if (!(length in context.words[source])) {
-        console.log(`Loading database for word length ${length}`);
-        const response = await fetch(`wordlists/${source}/e${length}.txt`);
+        const dbType = getDbType(source, length);
+        console.log(`Loading ${dbType} database for word length ${length}`);
+        const response = await fetch(`wordlists/${source}/e${length}.${dbType}`);
         if (!response.ok) {
             if (response.status == 404) {
                 console.log(`Can't find database for word length ${length}`);
@@ -89,7 +95,28 @@ async function loadWordlist(source, length) {
             }
             throw new CsError(`An error has occurred: ${response.status}`);
         }
-        const words = await response.text();
+
+        let words = null;
+        if (dbType == "txt") {
+            words = await response.text();
+        }
+        else if (dbType == "dawg") {
+            const wordsBin = await response.arrayBuffer();
+            const dawg = new CompletionDAWG();
+
+            let startTime = performance.now();
+            dawg.load(wordsBin);
+            let endTime = performance.now();
+            console.log(`Loaded DAWG database in ${endTime - startTime} milliseconds`)
+
+            startTime = performance.now();
+            words = dawg.keys().join("\n");
+            endTime = performance.now();
+            console.log(`Extracted DAWG database in ${endTime - startTime} milliseconds`)
+        }
+        else {
+            throw new CsError(`Unknown DB type: ${dbType}`);
+        }
         context.words[source][length] = words;
     }
 
