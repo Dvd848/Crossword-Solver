@@ -2,7 +2,7 @@ FROM ubuntu:latest
 
 RUN \
     apt-get update \
- && apt-get install -y perl hspell wget tar \
+ && apt-get install -y perl hspell wget tar dawgdic-tools \
  && wget http://hspell.ivrix.org.il/hspell-1.4.tar.gz \
  && tar -xvf hspell-1.4.tar.gz \
  && rm -rf /var/lib/apt/lists/* 
@@ -16,4 +16,5 @@ WORKDIR /app
 
 
 # docker build -t hspell .
-# docker run -it --mount type=bind,source="${PWD}",target=/app hspell /bin/bash
+# docker run -it --rm --mount type=bind,source="${PWD}",target=/app --mount type=bind,source="${PWD}\..\..\wordlists",target=/words hspell /bin/bash
+# find /words -type f -iname "e*.txt" -exec bash -c 'dawgdic-build -g "$1" > "${1%.txt}.dawg"' _ {} \;
