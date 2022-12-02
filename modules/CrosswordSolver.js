@@ -8,15 +8,8 @@ const context = {
 
     words: {},
 
-    // TODO: Share with word_processor.py
-    translateMapping: {
-        "א": "a", "ב": "b", "ג": "g", "ג'": "j", "ד": "d", "ה": "h", 
-        "ו": "v", "ז": "z", "ז'": "Z", "ח": "H", "ט": "T", "י": "y", 
-        "כ": "c", "ך": "C", "ל": "l", "מ": "m", "ם": "M", "נ": "n", 
-        "ן": "N", "ס": "s", "ע": "e", "פ": "p", "ף": "P", "צ": "w", 
-        "צ'": "W", "ץ": "x", "ץ'": "X", "ק": "k", "ר": "r", "ש": "S", 
-        "ת": "t", "ת'": "q"
-    },
+    translateMapping: null,
+    listSource: null,
 
     reverseTranslateMapping: {},
 
@@ -35,10 +28,15 @@ export class CsIllegalTemplateError extends CsError {
     }
 }
 
-function initModule() {
+async function initModule() {
     if (context.initialized) {
         return;
     }
+
+    const response = await fetch(`wordlists/config.json`);
+    const config = await response.json();
+    context.translateMapping = config["translate_mapping"];
+    context.listSource = config["list_source"];
 
     const apostropheChars = []
     for (const [key, value] of Object.entries(context.translateMapping)) {
@@ -72,7 +70,15 @@ function cartesian(...args) {
 }
 
 function getDbType(source, length) {
-    return "dawg";
+    if (!(source in context.listSource)) {
+        return "";
+    }
+
+    if (length >= context.listSource[source].length) {
+        return "";
+    }
+
+    return context.listSource[source][length];
 }
 
 async function loadWordlist(source, length) {
@@ -86,7 +92,13 @@ async function loadWordlist(source, length) {
 
     if (!(length in context.words[source])) {
         const dbType = getDbType(source, length);
+        if (dbType == "") {
+            console.log(`Can't find ${dbType} database for word length ${length}`);
+            return "";
+        }
+
         console.log(`Loading ${dbType} database for word length ${length}`);
+
         const response = await fetch(`wordlists/${source}/e${length}.${dbType}`);
         if (!response.ok) {
             if (response.status == 404) {
@@ -163,7 +175,7 @@ function constructSearchRegex(template) {
 }
 
 export async function getWords(source, template) {
-    initModule();
+    await initModule();
     if (!isLegelTemplate(template)) {
         throw new CsIllegalTemplateError(`Illegal template: '${template}'`);
     }
