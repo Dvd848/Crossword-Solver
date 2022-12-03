@@ -1,7 +1,7 @@
 from pathlib import Path
 from parse_common import *
 
-# Source: https://dumps.wikimedia.org/hewiktionary/latest/
+# Source: https://dumps.wikimedia.org/hewiktionary/latest/hewiktionary-latest-all-titles.gz
 
 INPUT_PATH = Path(__file__).parent / "hewiktionary-latest-all-titles.txt" 
 

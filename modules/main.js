@@ -1,14 +1,12 @@
 import { getWords, dictSources, CsIllegalTemplateError, getApostropheChars } from './CrosswordSolver.js';
 
-class CsUiError extends Error {
-    constructor(type, title, message, options) {
-        super(message, options);
-        this.type = type;
-        this.title = title;
-    }
-}
+/*
+############################################################################################
+# Helper functions to process long tasks in chunks (without freezing UI)                   #
+# Based on https://stackoverflow.com/questions/38735201/                                   #
+############################################################################################
+*/
 
-// https://stackoverflow.com/questions/38735201/
 const pause = (function () {
     let reqId = 0;
     const reqs = new Map();
@@ -39,42 +37,44 @@ async function processWork(array, workCallback, doneCallback) {
     doneCallback();
 }
 
-function toggleAlert(type, title, message, show) {
-    const alertElem = document.getElementById("alert_div");
-    let cssAlert = "";
+/*
+############################################################################################
+# Main logic                                                                               #
+############################################################################################
+*/
 
-    switch (type) {
-        case "warning":
-            cssAlert = "alert-warning";
-            break;
-        case "error":
-        default:
-            cssAlert = "alert-danger";
-            break;
+class CsUiError extends Error {
+    constructor(type, title, message, options) {
+        super(message, options);
+        this.type = type;
+        this.title = title;
     }
+}
+
+export function init() {
+    setupForm();
+    setupDictSources();
+    document.getElementById("template").focus();
+    console.log("Initialization complete");
+};
+
+function setupForm() {
+    document.getElementById("word_form").onsubmit = async function(event) {
+        event.preventDefault();
+        await showWords();
     
-    if (show) {
-        document.getElementById("alert_title").innerText = title;
-        document.getElementById("alert_message").innerHTML = message;
-        alertElem.classList.remove("alert-warning");
-        alertElem.classList.remove("alert-danger");
-        alertElem.classList.add(cssAlert);
-
-        alertElem.classList.remove("d-none");
-        alertElem.classList.add("show");
-    }
-    else {
-        alertElem.classList.remove("show");
-        alertElem.classList.add("d-none");
-    }
+        return false;
+    };
 }
 
-function showAlert(type, title, message) {
-    toggleAlert(type, title, message, true);
-}
-
-function hideAlert() {
-    toggleAlert("", "", "", false);
+function setupDictSources() {
+    const dictSourceSelect = document.getElementById("sources");
+    for (let source of dictSources){
+        const opt = document.createElement('option');
+        opt.value = source.code;
+        opt.innerText = source.name;
+        dictSourceSelect.appendChild(opt);
+    }
 }
 
 async function showWords() {
@@ -149,28 +149,40 @@ async function showWords() {
     }
 }
 
-function setupForm() {
-    document.getElementById("word_form").onsubmit = async function(event) {
-        event.preventDefault();
-        await showWords();
-    
-        return false;
-    };
-}
+function toggleAlert(type, title, message, show) {
+    const alertElem = document.getElementById("alert_div");
+    let cssAlert = "";
 
-function setupDictSources() {
-    const dictSourceSelect = document.getElementById("sources");
-    for (let source of dictSources){
-        const opt = document.createElement('option');
-        opt.value = source.code;
-        opt.innerText = source.name;
-        dictSourceSelect.appendChild(opt);
+    switch (type) {
+        case "warning":
+            cssAlert = "alert-warning";
+            break;
+        case "error":
+        default:
+            cssAlert = "alert-danger";
+            break;
+    }
+    
+    if (show) {
+        document.getElementById("alert_title").innerText = title;
+        document.getElementById("alert_message").innerHTML = message;
+        alertElem.classList.remove("alert-warning");
+        alertElem.classList.remove("alert-danger");
+        alertElem.classList.add(cssAlert);
+
+        alertElem.classList.remove("d-none");
+        alertElem.classList.add("show");
+    }
+    else {
+        alertElem.classList.remove("show");
+        alertElem.classList.add("d-none");
     }
 }
 
-export function init() {
-    setupForm();
-    setupDictSources();
-    document.getElementById("template").focus();
-    console.log("Initialization complete");
-};
+function showAlert(type, title, message) {
+    toggleAlert(type, title, message, true);
+}
+
+function hideAlert() {
+    toggleAlert("", "", "", false);
+}
