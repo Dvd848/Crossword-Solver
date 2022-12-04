@@ -27,18 +27,43 @@ h1 {
 }
 
 ol#words {
-    display: none;
-    width: 90%;
-    column-count: 5;
-    column-width: 13em;
-    margin: 30px auto;
-    padding: 15px;
+    /*display: none;*/
+    /*column-count: 5;*/
+    /*columns: 5;*/
+    /*column-width: 13em;*/
+    /*display: grid;*/
+    /*grid-template-columns: repeat(5, 1fr);*/
 
+    /*padding: 15px;*/
+    
+    padding: 0px;
     text-align: center;
     list-style-position: inside;
-    box-shadow: rgba(9, 30, 66, 0.25) 0px 4px 8px -2px, rgba(9, 30, 66, 0.08) 0px 0px 0px 1px;
 }
 
+ol#words li {
+    float: right;
+    width: 100%;
+    max-width: 250px;
+}
+
+ol#words hr {
+    /*float: right;*/
+    /*clear: both;*/
+    width: 100%;
+    margin: 30px auto;
+    position: relative;
+    top: 20px;
+}
+
+#word_wrapper {
+    display: none;
+    text-align: center;
+    margin: 30px auto;
+    padding: 10px;
+    width: 90%;
+    box-shadow: rgba(9, 30, 66, 0.25) 0px 4px 8px -2px, rgba(9, 30, 66, 0.08) 0px 0px 0px 1px;
+}
 
 #word_form, #word_form .row {
     align-items: center;
@@ -55,4 +80,8 @@ ol#words {
 #loader {
     margin: 30px auto;
     display: none;
+}
+
+#more_button {
+    margin: 20px auto;
 }

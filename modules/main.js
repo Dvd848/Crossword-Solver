@@ -26,9 +26,10 @@ const pause = (function () {
     });
 })();
 
-async function processWork(array, workCallback, doneCallback) {
+async function processWork(array, start, end, workCallback, doneCallback) {
     const iterationsPerChunk = 10000;
-    for (let i = 0; i < array.length; i++) {
+    const limit = Math.min(array.length, end);
+    for (let i = start; i < limit; i++) {
         if (i && i % iterationsPerChunk === 0) {
             await pause();
         }
@@ -77,6 +78,44 @@ function setupDictSources() {
     }
 }
 
+async function showWordsChunk(words, start, wordList, loader, wordListWrapper, submitButton) {
+    const WORDS_PER_CHUNK = 100;
+    const end = Math.min(start + WORDS_PER_CHUNK, words.length);
+
+    await processWork(words, start, end, function(word){
+        // Executed for each word:
+        let li = document.createElement("li");
+        li.appendChild(document.createTextNode(word));
+        wordList.appendChild(li);
+    }, 
+    function() {
+        // Executed when done:
+        if (start == 0) {
+            loader.style.display = "none";
+            wordListWrapper.appendChild(wordList);
+            wordList.style.display = "block";
+            wordListWrapper.style.display = "block";
+            submitButton.disabled = false; 
+        }
+
+        let more = document.getElementById("more_button");
+        if (more != null) {
+            more.remove();
+        }
+
+        if (end != words.length) {
+            const hr = document.createElement("hr");
+            wordList.appendChild(hr);
+            more = document.createElement("button");
+            more.appendChild(document.createTextNode(`הציגו עוד ${words.length - end} תוצאות »`));
+            more.onclick = async function(){await showWordsChunk(words, end, wordList, loader, wordListWrapper, submitButton)};
+            more.classList.add("btn", "btn-dark");
+            more.id = "more_button";
+            wordListWrapper.appendChild(more);
+        }
+    });
+}
+
 async function showWords() {
     const wordTemplate = document.getElementById("template").value.trim();
     const dictSource = document.getElementById("sources").value;
@@ -95,6 +134,7 @@ async function showWords() {
         wordList.remove();
     }
 
+    wordListWrapper.style.display = "none";
     loader.style.display = "block";
     wordList = document.createElement("ol");
     wordList.id = "words";
@@ -113,19 +153,7 @@ async function showWords() {
             throw new CsUiError("warning", "אופס...", message);
         }
 
-        await processWork(words, function(word){
-            // Executed for each word:
-            let li = document.createElement("li");
-            li.appendChild(document.createTextNode(word));
-            wordList.appendChild(li);
-        }, 
-        function() {
-            // Executed when done:
-            loader.style.display = "none";
-            wordListWrapper.appendChild(wordList);
-            wordList.style.display = "block";
-            submitButton.disabled = false; 
-        });
+        await showWordsChunk(words, 0, wordList, loader, wordListWrapper, submitButton);
     } catch (e) {
         loader.style.display = "none";
 
