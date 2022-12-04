@@ -79,8 +79,10 @@ function setupDictSources() {
 }
 
 async function showWordsChunk(words, start, wordList, loader, wordListWrapper, submitButton) {
-    const WORDS_PER_CHUNK = 100;
+    const WORDS_PER_CHUNK = 500;
     const end = Math.min(start + WORDS_PER_CHUNK, words.length);
+
+    const scrollTop = document.documentElement.scrollTop;
 
     await processWork(words, start, end, function(word){
         // Executed for each word:
@@ -90,6 +92,7 @@ async function showWordsChunk(words, start, wordList, loader, wordListWrapper, s
     }, 
     function() {
         // Executed when done:
+
         if (start == 0) {
             loader.style.display = "none";
             wordListWrapper.appendChild(wordList);
@@ -113,6 +116,12 @@ async function showWordsChunk(words, start, wordList, loader, wordListWrapper, s
             more.id = "more_button";
             wordListWrapper.appendChild(more);
         }
+
+        // Deal with weird Chrome bug
+        window.scrollTo({
+            top: scrollTop,
+            behavior: 'instant'
+        });
     });
 }
 
