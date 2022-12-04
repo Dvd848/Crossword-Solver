@@ -27,33 +27,21 @@ h1 {
 }
 
 ol#words {
-    /*display: none;*/
-    /*column-count: 5;*/
-    /*columns: 5;*/
-    /*column-width: 13em;*/
-    /*display: grid;*/
-    /*grid-template-columns: repeat(5, 1fr);*/
+    display: none;
+    column-count: 5;
+    column-width: 13em;
 
-    /*padding: 15px;*/
+    padding: 0;
     
-    padding: 0px;
     text-align: center;
     list-style-position: inside;
-}
-
-ol#words li {
-    float: right;
-    width: 100%;
-    max-width: 250px;
+    margin-bottom: 0;
 }
 
 ol#words hr {
-    /*float: right;*/
-    /*clear: both;*/
     width: 100%;
-    margin: 30px auto;
-    position: relative;
-    top: 20px;
+    margin: 20px auto 10px auto;
+    column-span: all;
 }
 
 #word_wrapper {
