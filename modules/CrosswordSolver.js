@@ -378,7 +378,7 @@ export const dictSources = [
         "allowSpaces": false,
     },
     {
-        "name": "אינציקלופדיה (ויקיפדיה)",
+        "name": "אנציקלופדיה (ויקיפדיה)",
         "code": "encyclopedia",
         "allowSpaces": true
     }
