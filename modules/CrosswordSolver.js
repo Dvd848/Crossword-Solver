@@ -61,7 +61,7 @@ const context = {
 
     // Regular expression to iterate the characters of the template.
     // A character followed by an apostrophe is considered one character.
-    TEMPLATE_CHARS: /(\?|[\u0590-\u05fe]'?)/g,
+    TEMPLATE_CHARS: /(\?|[\u0590-\u05fe]'?| )/g,
 
     // Regex to determine if the given template is legal.
     // Populated in runtime based on the translateMapping.
@@ -99,8 +99,9 @@ export class CsError extends Error {
  * Custom Crossword-Solver exception for an illegal template.
  */
 export class CsIllegalTemplateError extends CsError {
-    constructor(message, options) {
+    constructor(message, options, allowSpaces) {
         super(message, options);
+        this.allowSpaces = allowSpaces;
     }
 }
 
@@ -120,6 +121,14 @@ async function initModule() {
     context.translateMapping = config["translate_mapping"];
     context.listSource = config["list_source"];
 
+    context.dictAttributes = {};
+
+    for (let source of dictSources){
+        context.dictAttributes[source.code] = {
+            "allowSpaces": source.allowSpaces
+        }
+    }
+
     const apostropheChars = []
     for (const [key, value] of Object.entries(context.translateMapping)) {
         context.reverseTranslateMapping[value] = key;
@@ -129,7 +138,7 @@ async function initModule() {
         }
     }
 
-    context.LEGAL_TEMPLATE = RegExp(`^([\u0590-\u05fe]|${apostropheChars.join("|")}|\\?)+$`, 'g')
+    context.LEGAL_TEMPLATE = RegExp(`^([\u0590-\u05fe ]|${apostropheChars.join("|")}|\\?)+$`, 'g')
 
     context.initialized = true;
 }
@@ -265,16 +274,26 @@ function heb2eng(word) {
  * @returns {string} The decoded word.
  */
 function eng2heb(word) {
-    return word.replace(/[a-zA-Z]/g, m => context.reverseTranslateMapping[m]);
+    let res = word.replace(/[a-zA-Z]/g, m => context.reverseTranslateMapping[m]);
+    return res.replace(/_/g, " ");
 }
 
 /**
  * Checks whether a given template is legal.
  * @param {string} template The template to test.
+ * @param {boolean} allowSpaces Are spaces allowed?
  * @returns {boolean} True iff the template is legal.
  */
-function isLegelTemplate(template) {
-    return template.match(context.LEGAL_TEMPLATE);
+function isLegalTemplate(template, allowSpaces) {
+    if (!template.match(context.LEGAL_TEMPLATE)) {
+        return false;
+    }
+
+    if ( (!allowSpaces) && (template.includes(" ")) ) {
+        return false;
+    }
+
+    return true;
 }
 
 /**
@@ -296,7 +315,10 @@ function constructSearchRegex(template) {
     for (const match of template.matchAll(context.TEMPLATE_CHARS)) {
         let char = match[0];
         if (char == "?") {
-            char = ".";
+            char = "[a-zA-Z]";
+        }
+        else if (char == " ") {
+            char = "_";
         }
         options[i].push(char);
         if (char in context.apostropheMapping) {
@@ -320,8 +342,10 @@ function constructSearchRegex(template) {
  */
 export async function getWords(source, template) {
     await initModule();
-    if (!isLegelTemplate(template)) {
-        throw new CsIllegalTemplateError(`Illegal template: '${template}'`);
+    if (!isLegalTemplate(template, context.dictAttributes[source].allowSpaces)) {
+        throw new CsIllegalTemplateError(`Illegal template: '${template}'`, 
+                                         {}, 
+                                         context.dictAttributes[source].allowSpaces);
     }
     const wordLength = getWordLength(template);
     const words = await loadWordlist(source, wordLength);
@@ -345,10 +369,17 @@ export function getApostropheChars() {
 export const dictSources = [
     {
         "name": "מילון (ויקימילון + Hebrew Wordnet)",
-        "code": "dictionary"
+        "code": "dictionary",
+        "allowSpaces": false,
     },
     {
         "name": "בודק איות (Hspell)",
-        "code": "hspell"
+        "code": "hspell",
+        "allowSpaces": false,
+    },
+    {
+        "name": "אינציקלופדיה (ויקיפדיה)",
+        "code": "encyclopedia",
+        "allowSpaces": true
     }
 ]

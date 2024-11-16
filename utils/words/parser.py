@@ -2,9 +2,24 @@ from pathlib import Path
 
 import parse_hspell
 import parse_wikidict
+import parse_wikipedia
 import parse_wordnet
 
 BASE_PATH = Path(__file__).parent
+
+def generate_general_terms():
+    words = set()
+    words.update(parse_wikipedia.extract_words())
+
+    with open(BASE_PATH / "words_encyclopedia.txt", "w", encoding="utf8") as o:
+        o.write("\n".join(words))
+    with open(BASE_PATH / "license_encyclopedia.txt", "w", encoding="utf8") as o:
+        o.write("The terms from this dictionary were retrieved from the following open-source repositories:\n")
+        o.write(" - Wikipedia\n")
+        o.write(f"\n{'=' * 80}\n\n")
+        o.write("License text for Wikipedia:\n")
+        o.write(parse_wikidict.LICENSE)
+        o.write(f"\n\n{'=' * 80}\n\n")
 
 def generate_dict_words():
     words = set()
@@ -41,6 +56,7 @@ def generate_spellcheck_words():
 def main():
     generate_dict_words()
     generate_spellcheck_words()
+    generate_general_terms()
 
 if __name__ == "__main__":
     main()

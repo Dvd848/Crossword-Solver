@@ -1,11 +1,17 @@
 utils/words/out
 utils/words/he_IL.dic
 utils/words/hewiktionary-latest-all-titles.txt
+utils/words/hewiki-latest-all-titles-in-ns0.txt
 utils/words/wolig.txt
 utils/words/woo.txt
 utils/words/words_*.txt
 utils/words/license_*.txt
 utils/words/hebrew_synonyms.xml
+utils/words/bizanouns.txt
+utils/words/bizaverbs.txt
+utils/words/extrawords.txt
+utils/words/milot.txt
+utils/words/shemp.txt
 tmp
 notes.txt
 *.pyc

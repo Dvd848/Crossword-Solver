@@ -169,11 +169,15 @@ async function showWords() {
         if (e instanceof CsUiError) {
             showAlert(e.type, e.title, e.message);
         } else if (e instanceof CsIllegalTemplateError) {
-            let message = "ניתן להשתמש אך ורק בתווים הבאים:</br>";
+            let message = "עבור מקור זה ניתן להשתמש אך ורק בתווים הבאים:</br>";
             message += "<ul>";
             message += "<li>אותיות בעברית</li>";
             message += `<li>גרש (במידה והוא מופיע לאחר ${getApostropheChars().join(" / ")})</li>`;
             message += "<li>סימן שאלה (לסימון תו לא ידוע)</li>";
+            if (e.allowSpaces)
+            {
+                message += "<li>רווחים</li>";
+            }
             message += "</ul>";
 
             showAlert("error", "שגיאה: תבנית לא חוקית!", message);
