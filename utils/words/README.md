@@ -2,9 +2,10 @@
 
 These scripts are used in order to generate the word-lists for the application.
 
-They result in the creation of two sources:
+They result in the creation of three sources:
  * *Wiktionary* and *Hebrew Wordnet* are merged into the "dictionary" source
  * *Hspell* is stored in the "Hspell" source
+ * *Wikipedia* is stored in the "encyclopedia" source
 
 ## Prerequisites
 
@@ -12,6 +13,7 @@ They result in the creation of two sources:
     * With some minor modifications the scripts can be altered to run natively though.
  * Download the raw word lists from their original sources
     * [Wiktionary](https://dumps.wikimedia.org/hewiktionary/latest/hewiktionary-latest-all-titles.gz)
+    * [Wikipedia](https://dumps.wikimedia.org/hewiki/latest/hewiki-latest-all-titles-in-ns0.gz)
     * [Hebrew Wordnet](http://cl.haifa.ac.il/projects/mwn/HWN.tar.gz)
     * [Hspell](https://github.com/LibreOffice/dictionaries/blob/master/he_IL/he_IL.dic)
        * Alternatively the script can be modified to use the raw results produced by Hspell. 
