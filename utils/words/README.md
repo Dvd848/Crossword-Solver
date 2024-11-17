@@ -12,7 +12,7 @@ They result in the creation of three sources:
  * Install [Docker](https://www.docker.com/)
     * With some minor modifications the scripts can be altered to run natively though.
  * Download the raw word lists from their original sources
-    * [Wiktionary](https://dumps.wikimedia.org/hewiktionary/latest/hewiktionary-latest-all-titles.gz)
+    * [Wiktionary](https://dumps.wikimedia.org/hewiktionary/latest/hewiktionary-latest-all-titles-in-ns0.gz)
     * [Wikipedia](https://dumps.wikimedia.org/hewiki/latest/hewiki-latest-all-titles-in-ns0.gz)
     * [Hebrew Wordnet](http://cl.haifa.ac.il/projects/mwn/HWN.tar.gz)
     * [Hspell](https://github.com/LibreOffice/dictionaries/blob/master/he_IL/he_IL.dic)
