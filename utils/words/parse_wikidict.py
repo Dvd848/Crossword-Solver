@@ -1,19 +1,16 @@
 from pathlib import Path
 from parse_common import *
 
-# Source: https://dumps.wikimedia.org/hewiktionary/latest/hewiktionary-latest-all-titles.gz
+# Source: https://dumps.wikimedia.org/hewiktionary/latest/hewiktionary-latest-all-titles-in-ns0.gz
 
-INPUT_PATH = Path(__file__).parent / "hewiktionary-latest-all-titles.txt" 
+INPUT_PATH = Path(__file__).parent / "hewiktionary-latest-all-titles-in-ns0.txt" 
 
 def extract_words():
     res = set()
     with open(INPUT_PATH, "r", encoding = "utf8") as f:
         for line in f:
-            if not line.startswith("0"):
-                print(f"Skipping {line.rstrip()}")
-                continue
-            line = line.rstrip().split()[1]
-            if  (has_excluded_characters(line)) or (len(line) == 1) or (len(line) == 2 and line[-1] == "'") or is_ignored(line):
+            line = line.rstrip()
+            if  (has_excluded_characters(line, allow_spaces=True)) or (len(line) == 1) or (len(line) == 2 and line[-1] == "'") or is_ignored(line):
                 print(f"Skipping {line}")
                 continue
             res.add(line)

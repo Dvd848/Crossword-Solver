@@ -40,6 +40,7 @@ Tl
 Ts
 WT
 Wk
+aC
 aH
 aM
 aP
@@ -134,6 +135,7 @@ jl
 kM
 kN
 kS
+kT
 kb
 kd
 kl
@@ -148,6 +150,7 @@ lS
 lT
 la
 lb
+ld
 le
 lg
 lh

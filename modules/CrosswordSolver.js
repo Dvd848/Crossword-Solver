@@ -370,7 +370,7 @@ export const dictSources = [
     {
         "name": "מילון (ויקימילון + Hebrew Wordnet)",
         "code": "dictionary",
-        "allowSpaces": false,
+        "allowSpaces": true,
     },
     {
         "name": "בודק איות (Hspell)",
