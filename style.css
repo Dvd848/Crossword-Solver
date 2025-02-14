@@ -47,10 +47,35 @@ ol#words hr {
 #word_wrapper {
     display: none;
     text-align: center;
-    margin: 30px auto;
+    margin: 30px 10px;
     padding: 10px;
     width: 90%;
     box-shadow: rgba(9, 30, 66, 0.25) 0px 4px 8px -2px, rgba(9, 30, 66, 0.08) 0px 0px 0px 1px;
+    flex: 2;
+}
+
+#iframe_wrapper {
+    margin: 30px 10px;
+    flex: 1;
+    display: none;
+}
+
+iframe {
+    width: 100%;
+    height: 100vh;
+    border: 1px solid #ccc;
+    position: sticky;
+    left: 0;
+    top: 0;
+    display: inline-flex;
+}
+
+#word_wrapper a:visited {
+    color: red;
+}
+
+#word_wrapper a:active {
+    color: orange;
 }
 
 #word_form, #word_form .row {
@@ -73,3 +98,4 @@ ol#words hr {
 #more_button {
     margin: 20px auto;
 }
+

@@ -123,8 +123,8 @@ async function initModule() {
 
     context.dictAttributes = {};
 
-    for (let source of dictSources){
-        context.dictAttributes[source.code] = {
+    for (const [code, source] of Object.entries(dictSources)) {
+        context.dictAttributes[code] = {
             "allowSpaces": source.allowSpaces
         }
     }
@@ -366,20 +366,23 @@ export function getApostropheChars() {
 /**
  * Mapping of available dictionaries.
  */
-export const dictSources = [
-    {
+export const dictSources = {
+    "dictionary": {
         "name": "מילון (ויקימילון + Hebrew Wordnet)",
-        "code": "dictionary",
         "allowSpaces": true,
+        "homepage": "https://he.wiktionary.org",
+        "searchQuery": "/w/index.php?title=###QUERY###&ns0=1",
     },
-    {
+    "hspell": {
         "name": "בודק איות (Hspell)",
-        "code": "hspell",
         "allowSpaces": false,
+        "homepage": null,
+        "searchQuery": null,
     },
-    {
+    "encyclopedia": {
         "name": "אנציקלופדיה (ויקיפדיה)",
-        "code": "encyclopedia",
-        "allowSpaces": true
+        "allowSpaces": true,
+        "homepage": "https://he.wikipedia.org",
+        "searchQuery": "/w/index.php?title=###QUERY###&ns0=1"
     }
-]
+}
