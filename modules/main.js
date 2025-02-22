@@ -109,7 +109,7 @@ function setupCategory() {
 
 async function showWordsChunk(words, start, wordList) {
     const WORDS_PER_CHUNK = 500;
-    const MAX_WINDOW_WIDTH_FOR_IFRAME = 1200;
+    const MAX_WINDOW_WIDTH_FOR_IFRAME = 1100;
     const end = Math.min(start + WORDS_PER_CHUNK, words.length);
 
     const scrollTop = document.documentElement.scrollTop;
@@ -141,11 +141,13 @@ async function showWordsChunk(words, start, wordList) {
             link.setAttribute("href", url);
             link.setAttribute("target", "_BLANK");
             link.addEventListener('click', function(event) {
-                if (window.innerWidth > MAX_WINDOW_WIDTH_FOR_IFRAME)
-                {
+                if (window.innerWidth > MAX_WINDOW_WIDTH_FOR_IFRAME) {
                     event.preventDefault();
-    
+                    
                     iframe.src = url;
+                    iframeWrapper.style.display = "block";
+                } else {
+                    iframeWrapper.style.display = "none";
                 }
             });
         }

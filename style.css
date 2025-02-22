@@ -74,6 +74,12 @@ iframe {
     color: red;
 }
 
+@media (hover: none) {
+    #word_wrapper li {
+      padding: 4px;
+    }
+  }
+
 #word_wrapper a:active {
     color: orange;
 }
