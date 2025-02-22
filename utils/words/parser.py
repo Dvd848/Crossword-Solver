@@ -21,22 +21,32 @@ def generate_general_terms():
         o.write(parse_wikidict.LICENSE)
         o.write(f"\n\n{'=' * 80}\n\n")
 
-def generate_dict_words():
+def generate_wikidict():
     words = set()
     words.update(parse_wikidict.extract_words())
-    words.update(parse_wordnet.extract_words())
 
-    with open(BASE_PATH / "words_dictionary.txt", "w", encoding="utf8") as o:
+    with open(BASE_PATH / "words_wikidict.txt", "w", encoding="utf8") as o:
         o.write("\n".join(words))
 
-    with open(BASE_PATH / "license_dictionary.txt", "w", encoding="utf8") as o:
+    with open(BASE_PATH / "license_wikidict.txt", "w", encoding="utf8") as o:
         o.write("The words from this dictionary were retrieved from the following open-source dictionaries:\n")
         o.write(" - Wiktionary\n")
-        o.write(" - Hebrew Wordnet\n")
         o.write(f"\n{'=' * 80}\n\n")
         o.write("License text for Wiktionary:\n")
         o.write(parse_wikidict.LICENSE)
         o.write(f"\n\n{'=' * 80}\n\n")
+
+def generate_wordnet():
+    words = set()
+    words.update(parse_wordnet.extract_words())
+
+    with open(BASE_PATH / "words_wordnet.txt", "w", encoding="utf8") as o:
+        o.write("\n".join(words))
+
+    with open(BASE_PATH / "license_wordnet.txt", "w", encoding="utf8") as o:
+        o.write("The words from this dictionary were retrieved from the following open-source dictionaries:\n")
+        o.write(" - Hebrew Wordnet\n")
+        o.write(f"\n{'=' * 80}\n\n")
         o.write("License text for Hebrew Wordnet:\n")
         o.write(parse_wordnet.LICENSE)
         o.write(f"\n\n{'=' * 80}\n\n")
@@ -54,7 +64,8 @@ def generate_spellcheck_words():
 
 
 def main():
-    generate_dict_words()
+    generate_wikidict()
+    generate_wordnet()
     generate_spellcheck_words()
     generate_general_terms()
 

@@ -55,6 +55,7 @@ class CsUiError extends Error {
 export function init() {
     setupForm();
     setupDictSources();
+    setupCategory();
     document.getElementById("template").focus();
     console.log("Initialization complete");
 };
@@ -69,36 +70,66 @@ function setupForm() {
 }
 
 function setupDictSources() {
-    const dictSourceSelect = document.getElementById("sources");
+    const dictSourceWrapper = document.getElementById("checkbox_wrapper");
 
     for (const [code, source] of Object.entries(dictSources)) {
-        const opt = document.createElement('option');
-        opt.value = code;
-        opt.innerText = source.name;
-        dictSourceSelect.appendChild(opt);
+        const div = document.createElement("div");
+        div.className = "form-check form-check-inline";
+        
+        const input = document.createElement("input");
+        input.className = "form-check-input";
+        input.type = "checkbox";
+        input.id = `sourceCheckbox_${code}`;
+        input.name = "sources";
+        input.value = code;
+        input.checked = true;
+        
+        const label = document.createElement("label");
+        label.className = "form-check-label";
+        label.htmlFor = input.id;
+        label.textContent = source.name;
+        
+        div.appendChild(input);
+        div.appendChild(label);
+        dictSourceWrapper.appendChild(div);
     }
 }
 
-async function showWordsChunk(dictSource, words, start, wordList, loader, wordListWrapper, iframeWrapper, submitButton) {
+function setupCategory() {
+    const select = document.getElementById("category");
+    select.addEventListener('change', function showOnChange(evt) {
+        const value = evt.target.value;
+
+      
+        const visibility = (value == "dictionary") ? "visible" : "hidden";
+        document.getElementById("template_help").style.visibility = visibility;
+    });
+    select.dispatchEvent(new Event('change'));
+}
+
+async function showWordsChunk(words, start, wordList) {
     const WORDS_PER_CHUNK = 500;
     const MAX_WINDOW_WIDTH_FOR_IFRAME = 1200;
     const end = Math.min(start + WORDS_PER_CHUNK, words.length);
 
     const scrollTop = document.documentElement.scrollTop;
     
-    let urlTemplate = null;
-    if (dictSources[dictSource].homepage != null)
-    {
-        urlTemplate = dictSources[dictSource].homepage + dictSources[dictSource].searchQuery;
-    }
     const iframe = document.getElementById('wiki-frame');
+    const submitButton = document.getElementById("submit");
+    const wordListWrapper = document.getElementById("word_wrapper");
+    const iframeWrapper = document.getElementById("iframe_wrapper");
+    const loader = document.getElementById("loader");
+    let showIframe = false;
 
-    await processWork(words, start, end, function(word){      
+    await processWork(words, start, end, function(wordItem){      
         // Executed for each word:
 
+        const word = wordItem.word;
         let url = "";
-        if (urlTemplate != null)
+        if (dictSources[wordItem.source].homepage != null)
         {
+            showIframe = true;
+            const urlTemplate = dictSources[wordItem.source].homepage + dictSources[wordItem.source].searchQuery;
             url = urlTemplate.replace("###QUERY###", encodeURIComponent(word));
         }
 
@@ -115,7 +146,6 @@ async function showWordsChunk(dictSource, words, start, wordList, loader, wordLi
                     event.preventDefault();
     
                     iframe.src = url;
-                    //iframeWrapper.style.display = "block";
                 }
             });
         }
@@ -131,8 +161,8 @@ async function showWordsChunk(dictSource, words, start, wordList, loader, wordLi
             wordList.style.display = "block";
             wordListWrapper.style.display = "block";
             submitButton.disabled = false; 
-            iframe.src = dictSources[dictSource].homepage || "about:blank";
-            const showIframe = (urlTemplate != null) && (window.innerWidth > MAX_WINDOW_WIDTH_FOR_IFRAME);
+            iframe.src = /*dictSources[dictSource].homepage ||*/ "about:blank";
+            showIframe = (showIframe) && (window.innerWidth > MAX_WINDOW_WIDTH_FOR_IFRAME);
             iframeWrapper.style.display = showIframe ? "block" : "none";
         }
 
@@ -146,7 +176,7 @@ async function showWordsChunk(dictSource, words, start, wordList, loader, wordLi
             wordList.appendChild(hr);
             more = document.createElement("button");
             more.appendChild(document.createTextNode(`הציגו עוד ${words.length - end} תוצאות »`));
-            more.onclick = async function(){await showWordsChunk(dictSource, words, end, wordList, loader, wordListWrapper, iframeWrapper, submitButton)};
+            more.onclick = async function(){await showWordsChunk(words, end, wordList)};
             more.classList.add("btn", "btn-dark");
             more.id = "more_button";
             wordListWrapper.appendChild(more);
@@ -162,7 +192,6 @@ async function showWordsChunk(dictSource, words, start, wordList, loader, wordLi
 
 async function showWords() {
     const wordTemplate = document.getElementById("template").value.trim();
-    const dictSource = document.getElementById("sources").value;
     const submitButton = document.getElementById("submit");
     const wordListWrapper = document.getElementById("word_wrapper");
     const iframeWrapper = document.getElementById("iframe_wrapper");
@@ -185,21 +214,69 @@ async function showWords() {
     wordList = document.createElement("ol");
     wordList.id = "words";
     hideAlert();
-
-    console.log(`Searching for '${wordTemplate}' in ${dictSource}`);
     
     try {
-        const words = await getWords(dictSource, wordTemplate);
-        if (words.length == 0) {
+        let wordsFinal = [];
+
+        const allWords = new Set();
+        let numIllegalTemplateErrors = 0;
+        let spacesAllowed = false;
+        let questionMarksAllowed = false;
+
+        const checkedValues = [];
+        document.querySelectorAll('input[name="sources"]:checked').forEach(checkbox => {
+            checkedValues.push(checkbox.value);
+        });
+
+        if (checkedValues.length == 0) {
+            let message = "<p style='text-align: center'>";
+            message += "חובה לבחור לפחות מקור אחד 🙁";
+            message += "<br/>";
+            message += "אחרת איפה נחפש?";
+            message += "</p>";
+            throw new CsUiError("warning", "אופס...", message);
+        }
+        
+        for (const code of checkedValues) {
+            try {
+                console.log(`Searching for '${wordTemplate}' in ${code}`);
+
+                const wordsTemp = await getWords(code, wordTemplate, 
+                                                 document.getElementById("category").value);
+                wordsTemp.forEach(item => {
+                    if (!allWords.has(item)) {
+                        allWords.add(item)
+                        wordsFinal.push({word: item, source: code});
+                    }
+                });
+            } catch (e) {
+                console.log(e);
+                if (e instanceof CsIllegalTemplateError) {
+                    numIllegalTemplateErrors++;
+                    spacesAllowed = spacesAllowed || e.allowSpaces;
+                    questionMarksAllowed = questionMarksAllowed || e.allowQuestionMarks;
+                }
+            }
+        }
+
+        if (numIllegalTemplateErrors == checkedValues.length) {
+            throw new CsIllegalTemplateError("", {}, spacesAllowed, questionMarksAllowed);
+        }
+
+        if (wordsFinal.length == 0) {
             let message = "<p style='text-align: center'>";
             message += "לא מצאנו אף מילה שמתאימה לתבנית הזו 🙁";
             message += "<br/>";
-            message += "נסו אולי מקור אחר?";
+            if (document.querySelectorAll('input[name="sources"]:not(:checked)').length > 0) {
+                message += "נסו אולי מקור אחר?";
+            }
             message += "</p>";
             throw new CsUiError("warning", "אופס...", message);
         }
 
-        await showWordsChunk(dictSource, words, 0, wordList, loader, wordListWrapper, iframeWrapper, submitButton);
+        wordsFinal.sort((a, b) => a.word.localeCompare(b.word));
+        await showWordsChunk(wordsFinal, 0, wordList);
+
     } catch (e) {
         loader.style.display = "none";
 
@@ -210,7 +287,11 @@ async function showWords() {
             message += "<ul>";
             message += "<li>אותיות בעברית</li>";
             message += `<li>גרש (במידה והוא מופיע לאחר ${getApostropheChars().join(" / ")})</li>`;
-            message += "<li>סימן שאלה (לסימון תו לא ידוע)</li>";
+            if (e.allowQuestionMarks)
+            {
+                message += "<li>סימן שאלה (לסימון תו לא ידוע)</li>";
+            }
+
             if (e.allowSpaces)
             {
                 message += "<li>רווחים</li>";
@@ -222,7 +303,7 @@ async function showWords() {
             showAlert("error", "שגיאה פנימית!", "מעניין מה קרה שם...");
         }
 
-        console.log(e.message);
+        console.log(e);
         submitButton.disabled = false; 
     }
 }

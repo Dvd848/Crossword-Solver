@@ -6,9 +6,6 @@ from parse_common import *
 
 INPUT_PATH = Path(__file__).parent / "hebrew_synonyms.xml" 
 
-def remove_niqqud_from_string(my_string):
-    return ''.join(['' if  1456 <= ord(c) <= 1479 else c for c in my_string])
-
 def extract_words():
     res = set()
     with open(INPUT_PATH, "r", encoding = "utf8") as f:
@@ -17,7 +14,9 @@ def extract_words():
             for node in root.findall(f'.//{name}'):
                 word = remove_niqqud_from_string(node.text)
                 word = word.strip("\n!")
-                if  (has_excluded_characters(word)) or is_ignored(word) or (len(word) == 1):
+                word = word.replace(" ", "_")
+                word = word.replace("-", "_")
+                if  (has_excluded_characters(word, allow_spaces=True)) or is_ignored(word) or (len(word) == 1):
                     print(f"Skipping {word}")
                     continue
                 res.add(word)

@@ -68,11 +68,15 @@ const context = {
     LEGAL_TEMPLATE: undefined,
 
     // Cache for wordlists. 
-    // Structure is: words[source][word_length] = <list of words>.
+    // Structure is: words[category][source][word_length] = <list of words>.
     words: {},
 
     // A mapping of how to encode Hebrew characters with Latin characters (Hebrew -> Latin).
     translateMapping: null,
+
+    // A mapping between the Hebrew Final Form characters and their matching non-Final Form characters.
+    // The mapping itself is already encoded in latin.
+    finalFormMapping: null,
 
     // A reverse mapping of how to decode Latin characters to Hebrew (Latin -> Hebrew).
     reverseTranslateMapping: {},
@@ -99,9 +103,10 @@ export class CsError extends Error {
  * Custom Crossword-Solver exception for an illegal template.
  */
 export class CsIllegalTemplateError extends CsError {
-    constructor(message, options, allowSpaces) {
+    constructor(message, options, allowSpaces, allowQuestionMarks) {
         super(message, options);
         this.allowSpaces = allowSpaces;
+        this.allowQuestionMarks = allowQuestionMarks;
     }
 }
 
@@ -116,9 +121,10 @@ async function initModule() {
         return;
     }
 
-    const response = await fetch(`wordlists/config.json`);
+    const response = await fetch(`wordlists/config.json?${Date.now()}`);
     const config = await response.json();
     context.translateMapping = config["translate_mapping"];
+    context.finalFormMapping = config["final_form_mapping"];
     context.listSource = config["list_source"];
 
     context.dictAttributes = {};
@@ -171,18 +177,20 @@ function cartesian(...args) {
  * 
  * @param {string} source The source for the requested database (see dictSources)
  * @param {number} length The word length for the requested database.
- * @returns {string} "txt" for a text database, "dawg" for a DAWG database and "" if there is no database.
+ * @param {category} category The category for the requested database.
+ * @returns {string} "txt" for a text database, "dawg" for a DAWG database,
+                     "json" for a JSON database and "" if there is no database.
  */
-function getDbType(source, length) {
-    if (!(source in context.listSource)) {
+function getDbType(source, length, category) {
+    if (!(source in context.listSource[category])) {
         return "";
     }
 
-    if (length >= context.listSource[source].length) {
+    if (length >= context.listSource[category][source].length) {
         return "";
     }
 
-    return context.listSource[source][length];
+    return context.listSource[category][source][length];
 }
 
 /**
@@ -190,29 +198,34 @@ function getDbType(source, length) {
  * Caches the result for future queries.
  * @param {string} source The source for the requested database (see dictSources)
  * @param {number} length The word length for the requested database.
+ * @param {category} category The category for the requested database.
  * @returns {string} The word-list for the requested parameters, or "" if no such word-list exists.
  */
-async function loadWordlist(source, length) {
+async function loadWordlist(source, length, category) {
     if (length <= 0) {
         throw new CsError(`Illegal length: ${length}`);
     }
 
-    if (!(source in context.words)) {
-        context.words[source] = {};
+    if (!(category in context.words)) {
+        context.words[category] = {};
     }
 
-    if (!(length in context.words[source])) {
+    if (!(source in context.words[category])) {
+        context.words[category][source] = {};
+    }
+
+    if (!(length in context.words[category][source])) {
         // Not in cache
 
-        const dbType = getDbType(source, length);
+        const dbType = getDbType(source, length, category);
         if (dbType == "") {
-            console.log(`Can't find ${dbType} database for word length ${length}`);
+            console.log(`Can't find ${category} ${source} database for word length ${length}`);
             return "";
         }
 
         console.log(`Loading ${dbType} database for word length ${length}`);
 
-        const response = await fetch(`wordlists/${source}/e${length}.${dbType}`);
+        const response = await fetch(`wordlists/${source}/${category}_e${length}.${dbType}`);
         if (!response.ok) {
             if (response.status == 404) {
                 console.log(`Can't find database for word length ${length}`);
@@ -240,13 +253,16 @@ async function loadWordlist(source, length) {
             endTime = performance.now();
             console.log(`Extracted DAWG database in ${endTime - startTime} milliseconds`)
         }
+        else if (dbType == "json") {
+            words = await response.json();
+        }
         else {
             throw new CsError(`Unknown DB type: ${dbType}`);
         }
-        context.words[source][length] = words;
+        context.words[category][source][length] = words;
     }
 
-    return context.words[source][length];
+    return context.words[category][source][length];
 }
 
 /**
@@ -282,14 +298,19 @@ function eng2heb(word) {
  * Checks whether a given template is legal.
  * @param {string} template The template to test.
  * @param {boolean} allowSpaces Are spaces allowed?
+ * @param {boolean} allowQuestionMarks Are question marks allowed?
  * @returns {boolean} True iff the template is legal.
  */
-function isLegalTemplate(template, allowSpaces) {
+function isLegalTemplate(template, allowSpaces, allowQuestionMarks) {
     if (!template.match(context.LEGAL_TEMPLATE)) {
         return false;
     }
 
     if ( (!allowSpaces) && (template.includes(" ")) ) {
+        return false;
+    }
+
+    if ( (!allowQuestionMarks) && (template.includes("?")) ) {
         return false;
     }
 
@@ -338,22 +359,77 @@ function constructSearchRegex(template) {
  * Retrieve the list of words matching the given template for the given source.
  * @param {string} source The source for the requested database (see dictSources)
  * @param {string} template The template to search for.
+ * @param {category} category The category for the requested database.
  * @returns {Array<string>} Array of matching words.
  */
-export async function getWords(source, template) {
+export async function getWords(source, template, category) {
     await initModule();
-    if (!isLegalTemplate(template, context.dictAttributes[source].allowSpaces)) {
+
+    const allowQuestionMarks = (category == "dictionary");
+    let allowSpaces = context.dictAttributes[source].allowSpaces;
+    
+    if (category == "anagram") {
+        template = template.replaceAll(" ", "");
+        allowSpaces = true;
+    }
+
+    if (!isLegalTemplate(template, allowSpaces, 
+                         allowQuestionMarks)) {
         throw new CsIllegalTemplateError(`Illegal template: '${template}'`, 
                                          {}, 
-                                         context.dictAttributes[source].allowSpaces);
+                                         allowSpaces,
+                                         allowQuestionMarks);
     }
-    const wordLength = getWordLength(template);
-    const words = await loadWordlist(source, wordLength);
-    const regex = constructSearchRegex(template);
 
-    const result = words.matchAll(regex);
-    return Array.from(result, ([word]) => eng2heb(word)).sort();
+    const wordLength = getWordLength(template);
+    const words = await loadWordlist(source, wordLength, category);
+    
+    if (category == "dictionary") {
+        const regex = constructSearchRegex(template);
+        console.log(`Searching for dictionary item ${heb2eng(template.replaceAll(" ", "_"))}`);
+        return Array.from(words.matchAll(regex), ([word]) => eng2heb(word)).sort();
+    }
+    else if (category == "anagram") {
+        const anagramEncoding = anagramEncoder(template);
+        console.log(`Searching for anagrams for encoding ${anagramEncoding}`);
+        if (anagramEncoding in words) {
+            return Array.from(words[anagramEncoding], (word) => eng2heb(word)).sort();
+        }
+    }
+    else {
+        throw new Error("Unknown category");
+    }
+
+    return [];
 }
+
+/**
+ * Encode a string by counting occurrences of each alphabetical character and 
+ * sorting them alphabetically.
+ * Spaces and underscores are ignored by the function.
+ * Final Form characters are converted to non-Final Form characters.
+ * All anagrams for a given string will encode to the same result.
+ * @param {string} s The input string to be encoded.
+ * @returns {string} A string where each character is followed by its count, sorted alphabetically.
+ */
+function anagramEncoder(s) {
+    s = s.replaceAll(" ", "");
+    s = s.replaceAll("_", "");
+    s = heb2eng(s);
+    s = s.split('').map(char => context.finalFormMapping[char] || char).join('');
+
+    let counter = {};
+    
+    for (let char of s) {
+        counter[char] = (counter[char] || 0) + 1;
+    }
+    
+    return Object.entries(counter)
+        .sort()
+        .map(([char, count]) => `${char}${count}`)
+        .join('');
+}
+
 
 /**
  * Return characters which can have an apostrophe.
@@ -367,11 +443,23 @@ export function getApostropheChars() {
  * Mapping of available dictionaries.
  */
 export const dictSources = {
-    "dictionary": {
-        "name": "מילון (ויקימילון + Hebrew Wordnet)",
+    "encyclopedia": {
+        "name": "ויקיפדיה",
+        "allowSpaces": true,
+        "homepage": "https://he.wikipedia.org",
+        "searchQuery": "/w/index.php?title=###QUERY###&ns0=1"
+    },
+    "wikidict": {
+        "name": "ויקימילון",
         "allowSpaces": true,
         "homepage": "https://he.wiktionary.org",
         "searchQuery": "/w/index.php?title=###QUERY###&ns0=1",
+    },
+    "wordnet": {
+        "name": "פרוייקט WordNet",
+        "allowSpaces": true,
+        "homepage": null,
+        "searchQuery": null,
     },
     "hspell": {
         "name": "בודק איות (Hspell)",
@@ -379,10 +467,4 @@ export const dictSources = {
         "homepage": null,
         "searchQuery": null,
     },
-    "encyclopedia": {
-        "name": "אנציקלופדיה (ויקיפדיה)",
-        "allowSpaces": true,
-        "homepage": "https://he.wikipedia.org",
-        "searchQuery": "/w/index.php?title=###QUERY###&ns0=1"
-    }
 }

@@ -3,7 +3,7 @@ import shutil
 import subprocess
 import json
 
-from collections import defaultdict
+from collections import defaultdict, Counter
 from pathlib import Path
 
 INPUT_DIR = Path(__file__).parent
@@ -21,12 +21,27 @@ translate_mapping = {
     "ת": "t", "ת'": "q"
 }
 
+final_form_mapping = {
+    translate_mapping["ך"]: translate_mapping["כ"],
+    translate_mapping["ם"]: translate_mapping["מ"],
+    translate_mapping["ן"]: translate_mapping["נ"],
+    translate_mapping["ף"]: translate_mapping["פ"],
+    translate_mapping["ץ"]: translate_mapping["צ"]
+}
+
 def init():
     try:
         shutil.rmtree(str(OUTPUT_DIR))
     except FileNotFoundError:
         pass
     OUTPUT_DIR.mkdir(parents = True, exist_ok = True)
+
+def anagram_encoder(s: str) -> str:
+    s = s.translate(s.maketrans("".join(final_form_mapping.keys()), "".join(final_form_mapping.values())))
+    counter = Counter(s)
+    sorted_items = sorted(counter.items())
+    
+    return "".join(f"{char}{count}" for char, count in sorted_items if char.isalpha())
 
 def process_words_to_text():
     for source in INPUT_DIR.glob(f"{INPUT_PREFIX}*.txt"):
@@ -37,6 +52,10 @@ def process_words_to_text():
 
         output_path = OUTPUT_DIR / identifier
         output_path.mkdir()
+
+        #
+        # Dictionary
+        #
 
         words_mapping = defaultdict(list)
         words_mapping_translated = defaultdict(list)
@@ -54,9 +73,23 @@ def process_words_to_text():
 
         for mapping, prefix in [(words_mapping, "h"), (words_mapping_translated, "e")]:
             for length, words in mapping.items():
-                with open(output_path / f"{prefix}{length}.txt", "w", encoding = "utf8") as o:
+                with open(output_path / f"dictionary_{prefix}{length}.txt", "w", encoding = "utf8") as o:
                     o.write("\n".join(sorted(words)))
 
+        #
+        # Anagrams
+        #
+
+        full_anagram_mapping = defaultdict(lambda: defaultdict(list))
+        for length, words in words_mapping_translated.items():
+            for word in sorted(words):
+                encoding = anagram_encoder(word)
+                clean_length = sum([int(x) for x in re.split(r"[a-zA-Z]", encoding) if x != ""])
+                full_anagram_mapping[clean_length][encoding].append(word)
+
+        for length, words in full_anagram_mapping.items():
+            with open(output_path / f"anagram_e{length}.json", "w", encoding = "utf8") as o:
+                o.write(json.dumps(words))
         license_path = INPUT_DIR / f"license_{identifier}.txt"
         if license_path.exists():
             shutil.copyfile(license_path, output_path / "LICENSE")
@@ -90,24 +123,50 @@ def create_config():
     with open(OUTPUT_DIR / "config.json", "w", encoding="utf8") as o:
         config = {}
         config["translate_mapping"] = translate_mapping
+        config["final_form_mapping"] = final_form_mapping
+        config["list_source"] = {}
 
-        list_source = {}
+        #
+        # Dictionary
+        #
+
+        dict_source = {}
         for directory in OUTPUT_DIR.iterdir():
             if not directory.is_dir():
                 continue
-            current_list_source = {}
-            for txt_file in Path(directory).glob("e*.txt"):
-                word_length = int(txt_file.stem.replace("e", ""))
+            current_dict_source = {}
+            for txt_file in Path(directory).glob("dictionary_e*.txt"):
+                word_length = int(txt_file.stem.replace("dictionary_e", ""))
                 txt_size = txt_file.stat().st_size
                 dawg_size = Path(txt_file.with_suffix(".dawg")).stat().st_size
-                current_list_source[word_length] = "txt" if txt_size <= dawg_size else "dawg"
+                current_dict_source[word_length] = "txt" if txt_size <= dawg_size else "dawg"
 
-            max_key = max(current_list_source.keys())
-            list_source[directory.name] = [""] * (max_key + 1)
-            for k, v in current_list_source.items():
-                list_source[directory.name][k] = v
+            max_key = max(current_dict_source.keys())
+            dict_source[directory.name] = [""] * (max_key + 1)
+            for k, v in current_dict_source.items():
+                dict_source[directory.name][k] = v
         
-        config["list_source"] = list_source
+        config["list_source"]["dictionary"] = dict_source
+
+        #
+        # Anagrams
+        #
+
+        anagram_source = {}
+        for directory in OUTPUT_DIR.iterdir():
+            if not directory.is_dir():
+                continue
+            current_anagram_source = {}
+            for json_file in Path(directory).glob("anagram_e*.json"):
+                word_length = int(json_file.stem.replace("anagram_e", ""))
+                current_anagram_source[word_length] = "json"
+
+            max_key = max(current_anagram_source.keys())
+            anagram_source[directory.name] = [""] * (max_key + 1)
+            for k, v in current_anagram_source.items():
+                anagram_source[directory.name][k] = v
+        
+        config["list_source"]["anagram"] = anagram_source
             
         o.write(json.dumps(config, indent=4))
     print("Done creating configuration")

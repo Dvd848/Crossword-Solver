@@ -19,4 +19,5 @@ def has_excluded_characters(string, allow_spaces = False):
     else:
         return EXCLUDE_CHARS_DISALLOW_SPACES.search(string)
 
-
+def remove_niqqud_from_string(my_string):
+    return ''.join(['' if  1456 <= ord(c) <= 1479 else c for c in my_string])

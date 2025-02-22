@@ -99,3 +99,9 @@ iframe {
     margin: 20px auto;
 }
 
+#checkbox_wrapper {
+    border: 1px solid gray;
+    padding: 10px;
+    border-radius: 15px;
+    margin: 15px auto;
+}
