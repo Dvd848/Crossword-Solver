@@ -33,7 +33,7 @@ async function processWork(array, start, end, workCallback, doneCallback) {
         if (i && i % iterationsPerChunk === 0) {
             await pause();
         }
-        workCallback(array[i]);
+        workCallback(i, array[i]);
     }
     doneCallback();
 }
@@ -53,23 +53,46 @@ class CsUiError extends Error {
 }
 
 export function init() {
-    setupForm();
-    setupDictSources();
-    setupCategory();
+    const context = {};
+    setupForm(context);
+    setupDictSources(context);
+    setupCategory(context);
+    setupControls(context);
     document.getElementById("template").focus();
     console.log("Initialization complete");
 };
 
-function setupForm() {
+function setupForm(context) {
     document.getElementById("word_form").onsubmit = async function(event) {
         event.preventDefault();
-        await showWords();
+        await showWords(context);
     
         return false;
     };
 }
 
-function setupDictSources() {
+function setupControls(context) {
+    document.addEventListener("keydown", function (event) {
+        let link = null;
+        let delta = 0;
+        if (event.key === "F4") {
+            event.preventDefault();
+
+            if (event.shiftKey) {
+                delta = -1;
+            } else {
+                delta = 1;
+            }
+
+            link = document.querySelector(`a[data-link_index="${context.click_index + delta}"]`);
+            if (link) {
+                link.click();
+            }            
+        }
+    });    
+}
+
+function setupDictSources(context) {
     const dictSourceWrapper = document.getElementById("checkbox_wrapper");
 
     for (const [code, source] of Object.entries(dictSources)) {
@@ -95,7 +118,7 @@ function setupDictSources() {
     }
 }
 
-function setupCategory() {
+function setupCategory(context) {
     const select = document.getElementById("category");
     select.addEventListener('change', function showOnChange(evt) {
         const value = evt.target.value;
@@ -107,7 +130,7 @@ function setupCategory() {
     select.dispatchEvent(new Event('change'));
 }
 
-async function showWordsChunk(words, start, wordList) {
+async function showWordsChunk(context, words, start, wordList) {
     const WORDS_PER_CHUNK = 500;
     const MAX_WINDOW_WIDTH_FOR_IFRAME = 1100;
     const end = Math.min(start + WORDS_PER_CHUNK, words.length);
@@ -121,7 +144,7 @@ async function showWordsChunk(words, start, wordList) {
     const loader = document.getElementById("loader");
     let showIframe = false;
 
-    await processWork(words, start, end, function(wordItem){      
+    await processWork(words, start, end, function(index, wordItem){      
         // Executed for each word:
 
         const word = wordItem.word;
@@ -138,9 +161,11 @@ async function showWordsChunk(words, start, wordList) {
         link.appendChild(document.createTextNode(word));
         if (url != "")
         {
+            link.dataset.link_index = ++context.link_count;
             link.setAttribute("href", url);
             link.setAttribute("target", "_BLANK");
             link.addEventListener('click', function(event) {
+                context.click_index = parseInt(link.dataset.link_index);
                 if (window.innerWidth > MAX_WINDOW_WIDTH_FOR_IFRAME) {
                     event.preventDefault();
                     
@@ -178,7 +203,7 @@ async function showWordsChunk(words, start, wordList) {
             wordList.appendChild(hr);
             more = document.createElement("button");
             more.appendChild(document.createTextNode(`הציגו עוד ${words.length - end} תוצאות »`));
-            more.onclick = async function(){await showWordsChunk(words, end, wordList)};
+            more.onclick = async function(){await showWordsChunk(context, words, end, wordList)};
             more.classList.add("btn", "btn-dark");
             more.id = "more_button";
             wordListWrapper.appendChild(more);
@@ -192,7 +217,7 @@ async function showWordsChunk(words, start, wordList) {
     });
 }
 
-async function showWords() {
+async function showWords(context) {
     const wordTemplate = document.getElementById("template").value.trim();
     const submitButton = document.getElementById("submit");
     const wordListWrapper = document.getElementById("word_wrapper");
@@ -203,6 +228,9 @@ async function showWords() {
     if (wordTemplate.length == 0) {
         return;
     }
+
+    context.click_index = 0;
+    context.link_count = 0;
     
     submitButton.disabled = true; 
 
@@ -277,7 +305,7 @@ async function showWords() {
         }
 
         wordsFinal.sort((a, b) => a.word.localeCompare(b.word));
-        await showWordsChunk(wordsFinal, 0, wordList);
+        await showWordsChunk(context, wordsFinal, 0, wordList);
 
     } catch (e) {
         loader.style.display = "none";
