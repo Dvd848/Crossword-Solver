@@ -558,6 +558,7 @@ bch
 bcr
 bcy
 bdH
+bdM
 bdd
 bdh
 bdk
@@ -576,6 +577,7 @@ bgT
 bgZ
 bgd
 bgr
+bgv
 bhM
 bhN
 bhT
@@ -1063,6 +1065,7 @@ hds
 hdv
 hdy
 hez
+hgM
 hgN
 hgh
 hgr
@@ -1344,6 +1347,7 @@ mdh
 mdl
 mdy
 meC
+meM
 meN
 meS
 meT
@@ -1801,6 +1805,7 @@ rpt
 rsN
 rsk
 rtC
+rtH
 rtM
 rtP
 rte

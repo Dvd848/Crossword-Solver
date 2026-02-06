@@ -65,9 +65,9 @@ def generate_spellcheck_words():
 
 def main():
     generate_wikidict()
-    generate_wordnet()
-    generate_spellcheck_words()
-    generate_general_terms()
+    # generate_wordnet()
+    # generate_spellcheck_words()
+    # generate_general_terms()
 
 if __name__ == "__main__":
     main()

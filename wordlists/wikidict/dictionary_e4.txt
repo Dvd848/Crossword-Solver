@@ -536,6 +536,7 @@ TvTM
 TvTP
 TvTh
 Tvbh
+Tvbt
 Tvgh
 Tvnh
 Tvpr
@@ -613,6 +614,7 @@ abhl
 abkN
 abkh
 abnT
+abnr
 abrC
 abrM
 abrh
@@ -882,6 +884,7 @@ azrH
 azvb
 azvr
 azyk
+bHTP
 bHsd
 bHvN
 bHvr
@@ -898,6 +901,7 @@ bTnh
 bTvH
 bTvN
 bTvy
+bTyH
 babv
 bach
 bakv
@@ -910,8 +914,10 @@ bavr
 bavs
 bcdy
 bclM
+bcll
 bcnh
 bcrh
+bcvH
 bcvr
 bcyr
 bday
@@ -1370,6 +1376,7 @@ ecvl
 ecvr
 ecvz
 edSh
+edSt
 ednh
 edvd
 edvt
@@ -1751,6 +1758,7 @@ hhyN
 hkSr
 hkah
 hklh
+hkrN
 hkyP
 hkyS
 hkya
@@ -1895,10 +1903,12 @@ hymr
 hynh
 hynv
 hysT
+hyvM
 hyvt
 hywr
 hzHh
 hzeh
+hzmh
 hznh
 hzyM
 hzyd
@@ -1944,6 +1954,7 @@ kblh
 kbly
 kbrN
 kbrt
+kbve
 kbvx
 kbyh
 kdHt
@@ -2162,6 +2173,7 @@ lbya
 lclC
 ldvj
 ldyd
+lebr
 lemt
 lenh
 lesh
@@ -2180,8 +2192,10 @@ lkkN
 lkmN
 lkvH
 lkvy
+lkyM
 llyN
 lmeN
+lmeT
 lmvd
 lncH
 lngr
@@ -2205,6 +2219,7 @@ lvgv
 lvhT
 lvkS
 lvks
+lvla
 lvlb
 lvmN
 lvrd
@@ -2230,6 +2245,7 @@ lywN
 lyyM
 lyzr
 lzbz
+lzcr
 lzvr
 lzvt
 mHSb
@@ -2314,6 +2330,7 @@ mSrt
 mSsh
 mStC
 mSth
+mSvM
 mSvS
 mSvT
 mSvb
@@ -2400,6 +2417,7 @@ mctM
 mctS
 mctb
 mctr
+mcvH
 mdHM
 mdHN
 mdHP
@@ -2516,6 +2534,7 @@ mlbN
 mlcd
 mlch
 mlgh
+mlgv
 mlgz
 mlkh
 mlml
@@ -3024,6 +3043,7 @@ nrgN
 nrgl
 nrwP
 nrwh
+nryh
 nrzh
 nsbh
 nscl
@@ -3444,6 +3464,7 @@ rvtM
 rvvH
 rvvh
 rvvk
+rvvy
 rvwH
 rvyh
 rvzN
@@ -3912,6 +3933,7 @@ wyyr
 yHdN
 yHdh
 yHsh
+yHsy
 yHwN
 yHyd
 ySbN

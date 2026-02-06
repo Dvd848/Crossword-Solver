@@ -1,19 +1,91 @@
 from pathlib import Path
 from parse_common import *
+import xml.etree.ElementTree as ET
 
-# Source: https://dumps.wikimedia.org/hewiktionary/latest/hewiktionary-latest-all-titles-in-ns0.gz
+# Source 1: https://dumps.wikimedia.org/hewiktionary/latest/hewiktionary-latest-all-titles-in-ns0.gz
 
-INPUT_PATH = Path(__file__).parent / "hewiktionary-latest-all-titles-in-ns0.txt" 
+INPUT_PATH1 = Path(__file__).parent / "hewiktionary-latest-all-titles-in-ns0.txt" 
+
+# Source 2: https://dumps.wikimedia.org/other/mediawiki_content_current/hewiktionary/2026-02-01/xml/bzip2/hewiktionary-2026-02-01-p2p64150.xml.bz2
+
+INPUT_PATH2 = Path(__file__).parent / "hewiktionary-2026-02-01-p2p64150.xml"
 
 def extract_words():
     res = set()
-    with open(INPUT_PATH, "r", encoding = "utf8") as f:
+    with open(INPUT_PATH1, "r", encoding = "utf8") as f:
         for line in f:
             line = line.rstrip()
             if  (has_excluded_characters(line, allow_spaces=True)) or (len(line) == 1) or (len(line) == 2 and line[-1] == "'") or is_ignored(line):
                 print(f"Skipping {line}")
                 continue
             res.add(line)
+
+    SECTION_RE = re.compile(r"===צירופים===\s*(.*?)(?:\n===|\Z)", re.DOTALL)
+    TEMPLATE_RE = re.compile(r"\{\{.*?\}\}", re.DOTALL)
+    PAREN_RE = re.compile(r"\([^)]*\)")
+    WIKILINK_RE = re.compile(r"\[\[(.*?)\]\]")
+    
+    BIDI_RE = re.compile(r"[\u200E\u200F\u202A-\u202E]")
+
+    phrases = set()
+
+    for event, elem in ET.iterparse(INPUT_PATH2, events=("end",)):
+        if elem.tag.endswith("text") and elem.text:
+            text = elem.text.replace("&quot;", '"')
+            for section in SECTION_RE.findall(text):
+
+                for line in section.splitlines():
+                    line = line.strip()
+
+                    if not line.startswith("*"):
+                        continue
+
+                    line = line.lstrip("*").strip()
+
+                    # remove templates {{ ... }}
+                    line = TEMPLATE_RE.sub("", line)
+
+                    # remove parentheses
+                    line = PAREN_RE.sub("", line)
+
+                    # replace hyphens with spaces
+                    line = re.sub(r"[-־–—]", " ", line)
+
+                    links = WIKILINK_RE.findall(line)
+
+                    extracted = []
+
+                    if links:
+                        for w in links:
+                            w = w.split("|")[-1].strip()
+                            extracted.append(w)
+                    else:
+                        extracted.append(line)
+
+                    for phrase in extracted:
+
+                        phrase = remove_niqqud_from_string(phrase)
+
+                        # remove bidi control characters
+                        phrase = BIDI_RE.sub("", phrase)
+
+                        # normalize whitespace
+                        phrase = re.sub(r"\s+", " ", phrase).strip()
+
+                        if not phrase:
+                            continue
+
+                        phrases.add(phrase)
+
+        elem.clear()
+
+    for line in phrases:
+        line = line.rstrip()
+        line = line.replace(" ", "_")
+        if  (has_excluded_characters(line, allow_spaces=True)) or (len(line) == 1) or (len(line) == 2 and line[-1] == "'") or is_ignored(line):
+            print(f"Skipping {line}")
+            continue
+        res.add(line)
     return res
 
 LICENSE = """

@@ -386,12 +386,12 @@ export async function getWords(source, template, category) {
     
     if (category == "dictionary") {
         const regex = constructSearchRegex(template);
-        console.log(`Searching for dictionary item ${heb2eng(template.replaceAll(" ", "_"))}`);
+        //console.log(`Searching for dictionary item ${heb2eng(template.replaceAll(" ", "_"))}`);
         return Array.from(words.matchAll(regex), ([word]) => eng2heb(word)).sort();
     }
     else if (category == "anagram") {
         const anagramEncoding = anagramEncoder(template);
-        console.log(`Searching for anagrams for encoding ${anagramEncoding}`);
+        //console.log(`Searching for anagrams for encoding ${anagramEncoding}`);
         if (anagramEncoding in words) {
             return Array.from(words[anagramEncoding], (word) => eng2heb(word)).sort();
         }
@@ -455,16 +455,17 @@ export const dictSources = {
         "homepage": "https://he.wiktionary.org",
         "searchQuery": "/w/index.php?title=###QUERY###&ns0=1",
     },
+    "hspell": {
+        "name": "בודק איות (Hspell)",
+        "allowSpaces": false,
+        "homepage": "https://www.milononline.net",
+        "searchQuery": "/do_search.php?sDIN=&Q=###QUERY###"
+    },
     "wordnet": {
         "name": "פרוייקט WordNet",
         "allowSpaces": true,
         "homepage": null,
         "searchQuery": null,
     },
-    "hspell": {
-        "name": "בודק איות (Hspell)",
-        "allowSpaces": false,
-        "homepage": null,
-        "searchQuery": null,
-    },
+    
 }
