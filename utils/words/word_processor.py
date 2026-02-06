@@ -59,6 +59,7 @@ def process_words_to_text():
 
         words_mapping = defaultdict(list)
         words_mapping_translated = defaultdict(list)
+        words_mapping_full = defaultdict(list)
         num_words = 0
 
         with open(source, "r", encoding = "utf8") as f:
@@ -73,8 +74,13 @@ def process_words_to_text():
 
         for mapping, prefix in [(words_mapping, "h"), (words_mapping_translated, "e")]:
             for length, words in mapping.items():
+                words_mapping_full[prefix].extend(words)
                 with open(output_path / f"dictionary_{prefix}{length}.txt", "w", encoding = "utf8") as o:
                     o.write("\n".join(sorted(words)))
+
+        with open(output_path / f"related_e0.txt", "w", encoding = "utf8") as o:
+            o.write("\n".join(sorted(words_mapping_full["e"])))
+            
 
         #
         # Anagrams
@@ -167,6 +173,19 @@ def create_config():
                 anagram_source[directory.name][k] = v
         
         config["list_source"]["anagram"] = anagram_source
+
+        # 
+        # Related expressions
+        #
+
+        related_source = {}
+        for name in dict_source.keys():
+            txt_file = OUTPUT_DIR / name / f"related_e0.txt"
+            txt_size = txt_file.stat().st_size
+            dawg_file = txt_file.with_suffix(".dawg")
+            dawg_size = dawg_file.stat().st_size if dawg_file.exists() else float('inf')
+            related_source[name] = {0: "txt" if txt_size <= dawg_size else "dawg"}
+        config["list_source"]["related"] = related_source
             
         o.write(json.dumps(config, indent=4))
     print("Done creating configuration")

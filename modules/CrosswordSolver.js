@@ -182,6 +182,7 @@ function cartesian(...args) {
                      "json" for a JSON database and "" if there is no database.
  */
 function getDbType(source, length, category) {
+    console.log(`Getting DB type for ${category} ${source} length ${length}`, context.listSource);
     if (!(source in context.listSource[category])) {
         return "";
     }
@@ -202,8 +203,13 @@ function getDbType(source, length, category) {
  * @returns {string} The word-list for the requested parameters, or "" if no such word-list exists.
  */
 async function loadWordlist(source, length, category) {
-    if (length <= 0) {
-        throw new CsError(`Illegal length: ${length}`);
+    if (category == "related") {
+        length = 0;
+    }
+    else {
+        if (length <= 0) {
+            throw new CsError(`Illegal length: ${length}`);
+        }
     }
 
     if (!(category in context.words)) {
@@ -395,6 +401,11 @@ export async function getWords(source, template, category) {
         if (anagramEncoding in words) {
             return Array.from(words[anagramEncoding], (word) => eng2heb(word)).sort();
         }
+    }
+    if (category == "related") {
+        const regex = `(?=.*_)(?=.*${heb2eng(template.replaceAll(" ", "_"))}).*`;
+        //console.log(`Searching for related expressions matching regex ${regex}`);
+        return Array.from(words.matchAll(regex), ([word]) => eng2heb(word)).sort();
     }
     else {
         throw new Error("Unknown category");

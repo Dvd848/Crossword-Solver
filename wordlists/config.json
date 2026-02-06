@@ -531,6 +531,20 @@
                 "json",
                 "json"
             ]
+        },
+        "related": {
+            "encyclopedia": {
+                "0": "txt"
+            },
+            "hspell": {
+                "0": "dawg"
+            },
+            "wikidict": {
+                "0": "txt"
+            },
+            "wordnet": {
+                "0": "txt"
+            }
         }
     }
 }
